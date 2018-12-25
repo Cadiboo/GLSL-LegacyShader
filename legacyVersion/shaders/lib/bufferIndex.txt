@@ -1,0 +1,4 @@
+gcolor = COLOR
+gdepth = DEPTH
+gnormal = NORMALS
+composite = LIGHTMAP

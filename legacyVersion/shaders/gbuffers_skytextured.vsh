@@ -1,15 +1,9 @@
 #version 400
 
-uniform vec3 sunPosition;
-uniform vec3 moonPosition;
-uniform vec3 cameraPosition;
-
-out vec2 texcoord;
-
-out vec3 sunVector;
-out vec3 moonVector;
-out vec3 lightVector;
-out vec3 upVector;
+out vec4 color;
+out vec4 texcoord;
+out vec4 lmcoord;
+out vec3 normal;
 
 uniform int worldTime;
 
@@ -49,9 +43,9 @@ void daytime() {
 
 void main() {
     daytime();
-
     gl_Position     = ftransform();
-    texcoord        = gl_MultiTexCoord0.st;
-    sunVector       = normalize(sunPosition);
-    moonVector      = normalize(moonPosition);
+    color           = gl_Color;
+    normal          = normalize(gl_NormalMatrix*gl_Normal);
+    texcoord        = gl_TextureMatrix[0]*gl_MultiTexCoord0;
+    lmcoord         = gl_TextureMatrix[1]*gl_MultiTexCoord1;
 }

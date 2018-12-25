@@ -1,21 +1,7 @@
-#version 400
-
-uniform vec3 sunPosition;
-uniform vec3 moonPosition;
-uniform vec3 cameraPosition;
-
-out vec2 texcoord;
-
-out vec3 sunVector;
-out vec3 moonVector;
-out vec3 lightVector;
-out vec3 upVector;
-
 uniform int worldTime;
 
-float pow2(float x) {
-    return x*x;
-}
+float ang = fract(worldTime / 24000.0 - 0.25);
+    ang = (ang + (cos(ang * 3.14159265358979) * -0.5 + 0.5 - ang) / 3.0) * 6.28318530717959;
 
 out float timeSunrise;
 out float timeNoon;
@@ -26,7 +12,7 @@ out float timeLightTransition;
 out float timeSun;
 
 const float transitionExp = 2.0;
-float timeVal = worldTime/24000;
+float timeVal = sunAngle;
 
 void daytime() {
     float tSunrise  = ((clamp(timeVal, 0.96, 1.0)-0.96) / 0.04  + 1-(clamp(timeVal, 0.02, 0.15)-0.02) / 0.13);
@@ -45,13 +31,4 @@ void daytime() {
     timeMoon    = clamp(pow2(tMoon), 0.0, 1.0);
     timeLightTransition = (clamp(tLightTransition1, 0.0, 1.0)+clamp(tLightTransition2, 0.0, 1.0));
     timeSun		= timeSunrise + timeNoon + timeSunset;
-}
-
-void main() {
-    daytime();
-
-    gl_Position     = ftransform();
-    texcoord        = gl_MultiTexCoord0.st;
-    sunVector       = normalize(sunPosition);
-    moonVector      = normalize(moonPosition);
 }
