@@ -4,6 +4,7 @@ uniform sampler2D gcolor;
 uniform sampler2D gdepth;
 uniform sampler2D gnormal;
 uniform sampler2D composite;
+uniform sampler2D gaux1;
 
 uniform float far;
 uniform float near;
@@ -31,6 +32,7 @@ float depth;
 
 struct imageColor{
     vec3 pre;
+    vec3 mask;
     vec3 post;
 } col;
 
@@ -54,8 +56,8 @@ float bayer2(vec2 a){
 #define bayer256(a) (bayer128(.5*(a))*.25+bayer2(a))
 
 void motionblur() {
-    const int samples = 6;
-    const float blurStrength = 0.06;
+    const int samples = 9;
+    const float blurStrength = 0.1;
 
     float d     = depth;
         d       = mix(d, pow(d, 0.01), mask.hand);
@@ -80,7 +82,7 @@ void motionblur() {
 
     vec2 vel    = (currPos-prevPos).xy*2.0;
         vel    *= blurSize;
-    const float maxVel = 0.046;
+    const float maxVel = 0.05;
         vel     = clamp(vel, -maxVel, maxVel)*dither;
 
     vec2 coord  = texcoord;
@@ -103,6 +105,8 @@ void motionblur() {
 void main() {
     depth = texture2D(gdepth, texcoord).r;
     col.pre = texture2D(gcolor, texcoord).rgb;
+    col.mask = texture2D(gaux1, texcoord).rgb;
+    mask.hand = col.mask.g;
     motionblur();
     //col.pre = texture2D(gnormal, texcoord).rgb;
 

@@ -12,6 +12,8 @@ const float skylightLuma        = 0.1;
 const float minLight            = 0.03;
 vec3 minLightColor              = vec3(0.93, 0.95, 1.0);
 
+const int bitdepth  = 8;
+
 uniform sampler2D gcolor;
 uniform sampler2D gdepth;
 uniform sampler2D gnormal;
@@ -352,23 +354,24 @@ void skyGradient() {
 
     float zenith    = dot(hVec2, nFrag);
     float horizon   = clamp(1-max(hBottom*0.75, hTop), 0.0, 1.0);
-        horizon     = pow(horizon*1.40, 2.60+timeNoon*0.40);
+        horizon     = pow(horizon*1.40, 3.00+timeNoon*0.40);
         //horizon     = clamp(horizon*4.0, 0.0, 1.0);
     float horizonLow = clamp(1-max(hBottom, hTop), 0.0, 1.0);
         horizonLow  = pow(horizonLow*2.5, 8.00+timeNoon);
-        horizonLow *= 1+timeSunrise*0.50;
+        horizonLow *= 1+timeSunrise*1.0;
         horizonLow  = clamp(horizonLow*5.0, 0.0, 1.0);
         horizonLow *= 1.0-timeMoon;
     float glow      = clamp(1.0-dot(sgVec, nFrag), 0.0, 1.0);
         glow        = clamp(pow(glow, 25.0)*(1.0-timeNoon*0.6)+pow(horizon, 1.30)*(0.04+pow(glow, 4.0)*15.0), 0.0, 1.0);
         glow       *= 1-timeMoon;
 
-    vec3 cSun       = colSunlight*clamp(1-timeMoon, 0.0, 1.0);
+    vec3 cSun       = colSunlight*colSunlight*3.0*clamp(1-timeMoon, 0.0, 1.0);
+        cSun       *= (1-timeNoon*0.6);
     vec3 cHorizon   = colHorizon;
     vec3 sky        = mix(colSky*(1.0-timeMoon*0.89), colHorizon, horizon);
-        sky         = mix(sky, cSun*0.70, horizonLow);
-        sky         = mix(sky, cSun, glow);
-        sky        += col.pre.rgb*(1-mask.solid);
+        sky         = mix(sky, cSun, horizonLow);
+        sky         = mix(sky, cSun, clamp(glow*2.0, 0.0, 1.0));
+        sky        += col.pre.rgb*2.0*(1-mask.solid);
 
     returnColor     = mix(returnColor, sky, (1-mask.solid));
 }
@@ -398,6 +401,37 @@ void tonemapFilmic() {
     vec3 white = filmicCurve(vec3(filmic.white));
     vec3 colOut = filmicCurve(colIn);
     returnColor = colOut/white;
+}
+
+int getColorBit() {
+	if (bitdepth==1) {
+		return 1;
+	} else if (bitdepth==2) {
+		return 4;
+	} else if (bitdepth==4) {
+		return 16;
+	} else if (bitdepth==6) {
+		return 64;
+	} else if(bitdepth==8){
+		return 255;
+	} else if (bitdepth==10) {
+		return 1023;
+	} else {
+		return 255;
+	}
+}
+
+void imageDither() {
+    int bits = getColorBit();
+    vec3 colDither = returnColor;
+        colDither *= bits;
+        colDither += bayer64(gl_FragCoord.xy)-0.5;
+
+        float colR = round(colDither.r);
+        float colG = round(colDither.g);
+        float colB = round(colDither.b);
+
+    returnColor = vec3(colR, colG, colB)/bits;
 }
 
 void main() {
@@ -435,13 +469,17 @@ void main() {
     dbao();
     applyShading();
 
-    skyGradient();
+    //skyGradient();
 
     tonemapFilmic();
+
+    imageDither();
 
     //returnColor    = vec3(shading.result);
 
     gl_FragData[0] = vec4(returnColor, 1.0);
-    gl_FragData[1] = vec4(vec3(depth.depth), 1.0);
+    gl_FragData[1] = vec4(vec3(depth.depth+(1-mask.solid)), 1.0);
     gl_FragData[2] = texture2D(gnormal, texcoord);
+    gl_FragData[4] = texture2D(gaux1, texcoord);
+
 }

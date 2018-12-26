@@ -18,4 +18,5 @@ uniform sampler2D texture;
 void main() {
     gl_FragData[0] = vec4((texture2D(texture, texcoord.st)*color).rgb, 1.0);
     gl_FragData[1] = vec4(vec3(0.0), 1.0);
+    gl_FragData[4] = vec4(0.0, 0.0, 1.0, 1.0);
 }

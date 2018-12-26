@@ -37,10 +37,10 @@ const float transitionExp = 2.0;
 float timeFloat = worldTime;
 
 void daytime() {
-    float tSunrise  = ((clamp(timeFloat, 23000.0, 24000.0) - 23000.0) / 1000.0) + (1-(clamp(timeFloat, 500.0, 1200.0) - 500.0) / 700.0);
+    float tSunrise  = ((clamp(timeFloat, 23000.0, 23500.0) - 23000.0) / 500.0) + (1-(clamp(timeFloat, 500.0, 1200.0) - 500.0) / 700.0);
     float tNoon     = ((clamp(timeFloat, 500.0, 1200.0) - 500.0) / 700.0) - ((clamp(timeFloat, 10500.0, 11500.0) - 10500.0) / 1000.0);
     float tSunset   = ((clamp(timeFloat, 10500.0, 11500.0) - 10500.0) / 1000.0) - ((clamp(timeFloat, 12000.0, 13000.0) - 12000.0) / 1000.0);
-    float tNight    = ((clamp(timeFloat, 12000.0, 13000.0) - 12000.0) / 1000.0) - ((clamp(timeFloat, 23000.0, 24000.0) - 23000.0) / 1000.0);
+    float tNight    = ((clamp(timeFloat, 12000.0, 13000.0) - 12000.0) / 1000.0) - ((clamp(timeFloat, 23000.0, 23500.0) - 23000.0) / 500.0);
     float tMoon     = ((clamp(timeFloat, 13000.0, 13750.0) - 13000.0) / 750.0) - ((clamp(timeFloat, 21500.0, 23000.0) - 21500.0) / 1500.0);
     float tLightTransition1 = ((clamp(timeFloat, 12500.0, 12600.0) - 12500.0) / 100.0) - ((clamp(timeFloat, 12900.0, 13100.0) - 12900.0) / 200.0);
     float tLightTransition2 = ((clamp(timeFloat, 22700.0, 23000.0) - 22700.0) / 300.0) - ((clamp(timeFloat, 23300.0, 23500.0) - 23300.0) / 200.0);
@@ -112,7 +112,7 @@ void naturals() {
     skySunrise.r = 0.30;
     skySunrise.g = 0.62;
     skySunrise.b = 1.0;
-    skySunrise *= 0.08;
+    skySunrise *= 0.06;
 
     vec3 skyNoon;
     skyNoon.r = 0.18;
@@ -130,15 +130,16 @@ void naturals() {
     skyNight.r = 0.1;
     skyNight.g = 0.4;
     skyNight.b = 1.0;
-    skyNight *= 0.4*(1-timeMoon*0.5);
+    skyNight *= 0.014*(1-timeMoon*0.5);
 
     colSky = skySunrise*timeSunrise + skyNoon*timeNoon + skySunset*timeSunset + skyNight*timeNight;
+    colSky *= 0.6;
 
     vec3 horizonSunrise;
-    horizonSunrise.r = 0.8;
-    horizonSunrise.g = 0.6;
+    horizonSunrise.r = 0.52;
+    horizonSunrise.g = 0.68;
     horizonSunrise.b = 1.0;
-    horizonSunrise *= 0.5;
+    horizonSunrise *= 0.6;
 
     vec3 horizonNoon;
     horizonNoon.r = 0.36;
@@ -156,10 +157,10 @@ void naturals() {
     horizonNight.r = 0.1;
     horizonNight.g = 0.4;
     horizonNight.b = 1.0;
-    horizonNight *= 0.4*(1-timeMoon*0.5);
+    horizonNight *= 0.1*(1-timeMoon*0.5);
 
     colHorizon = horizonSunrise*timeSunrise + horizonNoon*timeNoon + horizonSunset*timeSunset + horizonNight*timeNight;
-
+    colHorizon *= 5.0;
 }
 
 void main() {
