@@ -1,5 +1,4 @@
-#version 130
-#include "lib/util/fastmath.glsl"
+#version 420 compatibility
 
 uniform int worldTime;
 
@@ -18,11 +17,7 @@ out vec3 moonVector;
 out vec3 lightVector;
 out vec3 upVector;
 
-#include "lib/util/daytime.glsl"
-
 void main() {
-    daytime();
-
     gl_Position     = ftransform();
     texcoord        = gl_MultiTexCoord0.st;
     sunVector       = normalize(sunPosition);
