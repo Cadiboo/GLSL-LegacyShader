@@ -200,8 +200,8 @@ void volumetricFog() {
 
     float scatter   = 0.0;
     float transmittance = 1.0;
-    float scatterCoefficient = 0.66;
-    float transmittanceCoefficient = 0.1;
+    const float scatterCoefficient = 0.66;
+    const float transmittanceCoefficient = 0.1;
     float density   = fogDensity;
     float weight    = 8/samples;
     if (samples < 4) {
