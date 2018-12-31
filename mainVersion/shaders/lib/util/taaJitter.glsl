@@ -11,5 +11,5 @@ const vec2 jitter[8] = vec2[8](vec2( 0.125,-0.375),
 							   vec2( 0.875, 0.875));
 							   
 vec2 taaJitter(vec2 coord, float w){
-	return jitter[int(mod(frameCounter,8.0))]*(w/vec2(viewWidth,viewHeight))*0.6 + coord;
+	return jitter[int(mod(frameCounter,8))]*(w/vec2(viewWidth,viewHeight))*0.6 + coord;
 }

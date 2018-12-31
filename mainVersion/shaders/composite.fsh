@@ -209,7 +209,7 @@ void volumetricFog() {
     }
 
     vec3 lightColor = mix(lcol.sunlight, colSkylight*sunlightLuma, timeNoon*0.75);
-    vec3 rayleighColor = lcol.skylight*(1+timeLightTransition*1.5)*0.5;
+    vec3 rayleighColor = lcol.skylight*(1+timeLightTransition*1.5)*0.2;
 
     for (int i = 0; i<samples; i++) {
         if (rayDepth > rayEnd) {

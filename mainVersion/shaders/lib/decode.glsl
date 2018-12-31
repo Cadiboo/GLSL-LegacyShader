@@ -15,7 +15,7 @@ void decodeMask() {
     mask.terrain        = cbuffer.mask.r;
     mask.hand           = cbuffer.mask.g;
     mask.translucency   = cbuffer.mask.b;
-    mask.solid          = clamp(cbuffer.mask.r+cbuffer.mask.g+cbuffer.mask.b, 0.0, 1.0);
+    mask.solid          = clamp(cbuffer.mask.r+cbuffer.mask.g, 0.0, 1.0);
 
     vec3 matBuffer      = texture2D(colortex4, texcoord).rgb;
     mat.foliage         = matBuffer.r;
