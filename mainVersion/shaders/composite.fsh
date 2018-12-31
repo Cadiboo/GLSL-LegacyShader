@@ -307,7 +307,7 @@ void main() {
     underwaterShadowcol();
 
     #ifdef volFog
-        //simpleFogLayer();
+        simpleFogLayer();
         volumetricFog();
     #else
         #ifdef sFog
