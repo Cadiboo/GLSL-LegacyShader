@@ -19,9 +19,11 @@ out vec3 lightVector;
 out vec3 upVector;
 
 #include "lib/util/daytime.glsl"
+#include "lib/amb/naturals.glsl"
 
 void main() {
     daytime();
+    naturals();
 
     gl_Position     = ftransform();
     texcoord        = gl_MultiTexCoord0.st;
