@@ -200,7 +200,7 @@ void volumetricFog() {
 
     float scatter   = 0.0;
     float transmittance = 1.0;
-    float scatterCoefficient = 0.3;
+    float scatterCoefficient = 0.66;
     float transmittanceCoefficient = 0.1;
     float density   = fogDensity;
     float weight    = 8/samples;
@@ -209,7 +209,7 @@ void volumetricFog() {
     }
 
     vec3 lightColor = mix(lcol.sunlight, colSkylight*sunlightLuma, timeNoon*0.75);
-    vec3 rayleighColor = lcol.skylight*(1+timeLightTransition*1.5)*0.1;
+    vec3 rayleighColor = lcol.skylight*(1+timeLightTransition*1.5)*0.5;
 
     for (int i = 0; i<samples; i++) {
         if (rayDepth > rayEnd) {
@@ -248,7 +248,7 @@ void volumetricFog() {
 void simpleFogLayer() {
     float density   = fogDensity;
         density    *= 0.005/fogDensity;
-    float maxDensity = 0.3;
+    float maxDensity = 0.24;
     vec3 fogColor   = mix(lcol.sunlight*(1-timeLightTransition), colSkylight*sunlightLuma*(1.0+timeLightTransition), 0.2+timeNoon*0.7);
     float d         = length(pos.camera.xz-pos.worldSpace.xz)/far;
     float start     = 0.75;
@@ -307,7 +307,7 @@ void main() {
     underwaterShadowcol();
 
     #ifdef volFog
-        simpleFogLayer();
+        //simpleFogLayer();
         volumetricFog();
     #else
         #ifdef sFog

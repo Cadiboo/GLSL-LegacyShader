@@ -137,7 +137,7 @@ void autoExposureLegacy() {
 void autoExposureAdvanced() {
     const float expMax  = 20.0;
     const float expMin  = minimumExposure;
-	    imageLuma = texture2D(colortex7, texcoord).a*6.6;
+	    imageLuma = texture2D(colortex7, texcoord).a*8.0;
 		imageLuma = clamp((imageLuma), expMin, expMax);
 	col.exposure = 1.0 - exp(-1.0/imageLuma);
 }
