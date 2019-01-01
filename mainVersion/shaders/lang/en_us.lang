@@ -1,0 +1,102 @@
+option.INFO=Nostalgia Shader by RRe36
+option.INFO.comment=See the GitHub Repository for issues, licensing and redistribution rules. IF YOU DID NOT DOWNLOAD THIS VIA MY GITHUB OR THE SHADERLABS DISCORD PLEASE CONTACT ME THERE!
+value.INFO.0=v1.0
+
+#Shading
+option.shadowMapResolution=Shadow Resolution
+option.shadowMapResolution.comment=Set the shadowmap resolution. Higher Values mean more detailed and sharper shadows but might decrease performance.
+option.shadowDistance=Shadow Distance
+option.shadowDistance.comment=Set the shadow distance. Higher Values mean a larger draw distance but can decrease performance.
+option.shadowSL=Shadow Darkness
+option.shadowSL.comment=Set how much sunlight should be mixed into the shadowcolor. No performance impact.
+option.softShadows=Soft Shadows
+option.softShadows.comment=Enable or disable shadow blurring for softer shadows. Minor performance impact.
+value.softShadows.true=ON
+value.softShadows.false=OFF
+option.softShadowSteps=Soft Shadow Samples
+option.softShadowSteps.comment=Set the amount of samples to be used for shadow softening to increase/decrease Quality. Minor performance impact.
+option.shadowBlur=Soft Shadow Blur
+option.shadowBlur.comment=Control the blur size for shadow softening. No performance impact.
+option.AO=Ambient Occlusion
+option.AO.comment=Enable or disable ambient occlusion. Moderate performance impact.
+option.aoSamples=Ambient Occlusion Samples
+option.aoSamples.comment=Set the amount of samples used by the ambient occlusion. Moderate performance impact.
+option.diffLambert=Diffuse Shading
+option.diffLambert.comment=Enable or disable Lambert diffuse shading. Minor performance impact.
+option.foliageFakeSSS=Fake Subsurface Scatter
+option.foliageFakeSSS.comment=Set the intensity of the fake foliage subsurface scattering effect. No performance impact.
+
+#Ambient Effects
+screen.Volumetrics.comment=Configure volumetric effects like fog and clouds.
+option.volFog=Volumetric Fog
+option.volFog.comment=Enable or disable volumetric fog. Moderate performance impact.
+option.fogSamp=Volumetrig Fog Samples
+option.fogSamp.comment=Set the amount of samples to be used by the raymarcher for volumetric fog. Can tremendously decrease performance!
+option.vFogFilterSteps=Volumetric Fog Filter Steps
+option.vFogFilterSteps.comment=Set the amount of samples to be used by the blur filter to hide the dither pattern. Moderate performance impact.
+option.vFogFilterSize=Volumetric Fog Filter Size
+option.vFogFilterSize.comment=Set the blur size to be used by the fog filtering. No performance impact.
+option.sFog=Simple Fog
+option.sFog.comment=Enable or disable simple distance based fog. Ineffective when using volumetric fog. Negligible performance impact.
+option.fogDens=Fog Density
+option.fogDens.comment=Set the fog density. No performance impact.
+
+#Terrain
+screen.Terrain.comment=Configure terrain effects like wind or water waves.
+option.windEffects=Wind Effects
+option.windEffects.comment=Enable or disable wind effects on grass, crops, leaves etc. Negligible performance impact.
+option.windInt=Wind Intensity
+option.windInt.comment=Set the intensity of the wind effect. No performance impact.
+
+#Lighting
+screen.Lighting.comment=Configure lighting parameters for torchlight, sunlight and skylight.
+option.minLightVal=Minimum Light
+option.minLightVal.comment=Set the minimum light brightness to be used in caverns and dark areas. No performance impact.
+option.skylightLum=Skylight Brightness
+option.skylightLum.comment=Set the skylight brightness for shaded areas. No performance impact.
+option.sunlightLum=Sunlight Brightness
+option.sunlightLum.comment=Set the sunlight brightness. No performance impact.
+
+#PostProcessing
+screen.PostProcessing=Post Processing
+screen.PostProcessing.comment=Configure post process effects like bloom and motionblur.
+option.cBloom=Bloom
+option.cBloom.comment=Enable or disable the bloom effect. Minor performance impact.
+option.bloomThresh=Bloom Threshold
+option.bloomThresh.comment=Configure the brightness threshold for bloom to be applied. No performance impact.
+option.bloomInt=Bloom Intensity
+option.bloomInt.comment=Configure the intensity of the bloom effect. No performance impact.
+option.mBlur=Motionblur
+option.mBlur.comment=Enable or disable the motionblur effect. Minor performance impact.
+option.mBlurSamples=Motionblur Samples
+option.mBlurSamples.comment=Configure the amount of samples to be used for motionblur. Minor performance impact.
+option.mBlurInt=Motionblur Intensity
+option.mBlurInt.comment=Configure the intensity of the motionblur effect. No performance impact.
+option.llDesat=Lowlight Desaturation
+option.llDesat.comment=Enable or disable lowlight desaturation to simulate the human eye in dark situations. Negligible performance impact.
+option.llGrain=Lowlight Grain
+option.llGrain.comment=Enable or disable lowlight grain to simulate the human eye in dark situations. Minor performance impact.
+option.bpc=Display Bitdepth
+option.bpc.comment=Set the output bits per channel for the image. This must match your display's native bits per color!
+screen.Tonemapping.comment=Configure the parameters for the custom configured filmic curve tonemapper.
+option.tToe=Toe
+option.tToe.comment=Set the toe parameter for the lower end of the curve.
+option.tSlope=Slope
+option.tSlope.comment=Set the slope parameter for midtones.
+option.tAngle=Angle
+option.tAngle.comment=Set the angle of the tonemapping curve.
+option.tShoulder=Shoulder
+option.tShoulder.comment=Set the shoulder value for the top end of the curve.
+option.tWhite=White
+option.tWhite.comment=Set the white point for the tonemapper.
+option.autoExposureSmoothing=Auto Exposure Smoothing
+option.autoExposureSmoothing.comment=Set the amount of temporal smoothing for the auto exposure. No performance impact.
+option.minimumExposure=Minimum Exposure
+option.minimumExposure.comment=Set the minimum exposure to brighten or darken dark situations. No performance impact.
+option.TAA=Temporal AA
+option.TAA.comment=Enable or disable temporal anti aliasing to smooth jagged edges. Minor performance impact.
+option.exposureType=Exposure Type
+option.exposureType.comment=Set the method used for calculationg the automatic image exposure. No performance impact.
+value.exposureType.0=Temporal
+value.exposureType.1=Non-Temporal
+value.exposureType.2=Legacy

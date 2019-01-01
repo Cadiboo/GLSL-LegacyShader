@@ -1,6 +1,7 @@
 #version 130
 #include "lib/util/fastmath.glsl"
 #include "lib/global.glsl"
+#define INFO 0
 
 //#define DEPTH_DEBUG
 
@@ -124,7 +125,7 @@ void lowlightDesaturation() {
 
 void autoExposureLegacy() {
     const float expMax  = 18.0;
-    const float expMin  = 0.2;
+    const float expMin  = minimumExposure;
     float eyeSkylight = eyeBrightnessSmooth.y*(1-timeNight*0.3-timeMoon*0.3);
     float eyeLight = eyeBrightnessSmooth.x*0.7;
     float imageLuma = max(eyeSkylight, eyeLight);
@@ -134,10 +135,20 @@ void autoExposureLegacy() {
     col.exposure = 1.0 - exp(-1.0/imageLuma);
 }
 
+void autoExposureNonTemporal() {
+    const float expMax  = 20.0;
+    const float expMin  = minimumExposure;
+	    imageLuma = length(texture2DLod(colortex0,vec2(0.5),log2(viewWidth*0.4)).rgb);
+        imageLuma = exp(imageLuma*8.0);
+		imageLuma = clamp((imageLuma), expMin, expMax);
+	col.exposure = 1.0 - exp(-1.0/imageLuma);
+}
+
 void autoExposureAdvanced() {
     const float expMax  = 20.0;
     const float expMin  = minimumExposure;
-	    imageLuma = texture2D(colortex7, texcoord).a*8.0;
+	    imageLuma = texture2D(colortex7, texcoord).a;
+        imageLuma = imageLuma*8.0;
 		imageLuma = clamp((imageLuma), expMin, expMax);
 	col.exposure = 1.0 - exp(-1.0/imageLuma);
 }
@@ -235,7 +246,14 @@ void main() {
     lowlightDesaturation();
     #endif
 
-    autoExposureAdvanced();
+    #if exposureType == 0
+        autoExposureAdvanced();
+    #elif exposureType == 1
+        autoExposureNonTemporal();
+    #elif exposureType == 2
+        autoExposureLegacy();
+    #endif
+
     tonemapFilmic();
     colorGrading();
     imageDither();
