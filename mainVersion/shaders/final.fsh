@@ -1,7 +1,7 @@
 #version 130
 #include "lib/util/fastmath.glsl"
 #include "lib/global.glsl"
-#define INFO 0
+#define INFO 0  //[0]
 
 //#define DEPTH_DEBUG
 
