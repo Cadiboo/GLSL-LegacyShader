@@ -202,7 +202,7 @@ void volumetricFog() {
     float transmittance = 1.0;
     const float scatterCoefficient = 0.66;
     const float transmittanceCoefficient = 0.1;
-    float density   = fogDensity;
+    float density   = fogDensity*0.18;
     float weight    = 8/samples;
     if (samples < 4) {
         weight += 4-samples;
@@ -215,16 +215,15 @@ void volumetricFog() {
         if (rayDepth > rayEnd) {
             float rayD = depthLinInv(rayDepth);
             vec4 rayP = rayPos(rayD);
-            float rayDensity = (sqrt(rayDepth)*1.8)*0.66 + (rayDepth*2.7)*0.33;
+            float rayDensity = (sqrt(rayDepth)*1.8)*0.74 + (rayDepth*2.7)*0.33;
             float oD = rayDensity*heightDensityFog(rayP.xyz+cameraPosition.xyz);
-            density *= 1+oD*0.25*weight;
+            density *= 1+clamp(oD*weight*0.9, 0.0, 0.75);
 
             //shadows
             vec4 wPos = rayP;
             wPos = shadowModelView * wPos;
             wPos = shadowProjection * wPos;
             wPos /= wPos.w;
-            //wPos.z += 0.02;
             float distortion = sqrt(wPos.x*wPos.x + wPos.y*wPos.y);
                 distortion = (1.0-shadowBias) + distortion*shadowBias;
             wPos.xy *= 1.0/distortion;
@@ -241,7 +240,6 @@ void volumetricFog() {
             }
         }
     vec3 fogColor = mix(rayleighColor, lightColor, scatter);
-    //returnColor = mix(returnColor, fogColor, density);
     bout.vFog   = vec4(fogColor, density);
 }
 
