@@ -274,7 +274,7 @@ void dbao() {
 void artificialLight() {
     float lightmap  = getLightmap(cbuffer.lightmap.x);
     vec3 lightColor = torchlighColor*lightLuma;
-    vec3 light      = mix(vec3(0.0), lightColor, lightmap+mat.emissive);
+    vec3 light      = mix(vec3(0.0), lightColor, lightmap+mat.emissive*5.0);
     shading.lights  = light;
 }
 

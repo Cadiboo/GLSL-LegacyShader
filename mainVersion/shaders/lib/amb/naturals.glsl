@@ -115,6 +115,6 @@ void naturals() {
     colHorizon *= (1-timeMoon*0.89);
 
     float fogBaseDensity = 0.011;
-    fogBaseDensity *= 3.0*timeSunrise+0.8*timeNoon+1.0*timeSunset+2.2*timeNight;
+    fogBaseDensity *= 4.0*timeSunrise+0.8*timeNoon+1.0*timeSunset+2.2*timeNight;
     fogDensity = fogBaseDensity*fogDens;
 }

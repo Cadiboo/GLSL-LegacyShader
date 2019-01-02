@@ -198,8 +198,9 @@ void volumetricFog() {
     const float transmittanceCoefficient = 0.1;
     float density   = fogDensity*0.18;
     float weight    = 8/samples;
+    float weightMod = 1.0;
     if (samples < 4) {
-        weight += 4-samples;
+        weightMod += (4-samples)*1.2;
     }
 
     vec3 lightColor = mix(lcol.sunlight, colSkylight*sunlightLuma, timeNoon*0.75);
@@ -211,7 +212,7 @@ void volumetricFog() {
             vec4 rayP = rayPos(rayD);
             float rayDensity = (sqrt(rayDepth)*1.8)*0.74 + (rayDepth*2.7)*0.33;
             float oD = rayDensity*heightDensityFog(rayP.xyz+cameraPosition.xyz);
-            density *= 1+clamp(oD*weight*0.9, 0.0, 0.75);
+            density *= 1+clamp(oD*weight*0.9, 0.0, 0.75)*weightMod;
 
             //shadows
             vec4 wPos = rayP;
