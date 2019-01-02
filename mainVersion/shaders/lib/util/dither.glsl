@@ -10,5 +10,18 @@ float bayer2(vec2 a){
 #define bayer128(a) (bayer64(.5*(a))*.25+bayer2(a))
 #define bayer256(a) (bayer128(.5*(a))*.25+bayer2(a))
 
-float ditherStatic      = bayer64(gl_FragCoord.xy);
-float ditherTemporal    = fract(ditherStatic + frameCounter/8.0);
+float ditherGradNoise(){
+    return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y));
+} 
+
+float ditherGradNoiseTemporal(){
+    return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y +0.00623715 *(frameCounter/1)));
+}
+
+float ditherStatic      = ditherGradNoise();
+float ditherTemporal    = fract(bayer64(gl_FragCoord.xy) + frameCounter/8.0);
+#ifdef TAA
+float ditherDynamic     = ditherTemporal;
+#else
+float ditherDynamic     = ditherStatic;
+#endif

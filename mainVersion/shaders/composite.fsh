@@ -171,12 +171,6 @@ vec4 rayPos(in float depth) {
     return posWorldSpace;
 }
 
-#ifdef TAA
-float ditherDynamic     = ditherTemporal;
-#else
-float ditherDynamic     = ditherStatic;
-#endif
-
 void underwaterShadowcol() {
     if (isEyeInWater == 1) {
         lcol.skylight     *= vec3(0.3, 0.66, 1.0)*0.3;
