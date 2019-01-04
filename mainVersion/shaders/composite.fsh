@@ -191,13 +191,15 @@ void volumetricFog() {
     float shade     = 1.0;
     float cDepth    = 0.0;
     float shadowMod = 1.0;
+    float weight    = 1.0/samples;
+        weight     *= 6.0;
+        weight     *= 1/max((1+(samples-8.0)*0.1), 0.25);
 
     float scatter   = 0.0;
     float transmittance = 1.0;
     const float scatterCoefficient = 0.66;
     const float transmittanceCoefficient = 0.1;
     float density   = fogDensity*0.18;
-    float weight    = 8/samples;
     float weightMod = 1.0;
     if (samples < 4) {
         weightMod += (4-samples)*1.2;
