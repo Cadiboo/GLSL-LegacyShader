@@ -38,7 +38,7 @@ void main() {
         #endif
     #endif
         vCloud.rgb += weather*0.7;
-        col.rgb = mix(col.rgb, vCloud.rgb, pow2(saturateFLOAT(vCloud.a))*(1-translucency*0.5));
+        col.rgb = mix(col.rgb, vCloud.rgb, saturateFLOAT(vCloud.a*2)*(1-translucency*0.5));
 
     #endif
 

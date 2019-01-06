@@ -18,7 +18,7 @@ out float translucency;
 void main() {
     idSetup();
     matSetup();
-    if (mc_Entity.x == 8.0 || mc_Entity.x == 9.0 || mc_Entity.x == block.glassStain) {
+    if (mc_Entity.x == 8.0 || mc_Entity.x == 9.0) {
         translucency = 1.0;
     } else {
         translucency = 0.0;

@@ -276,16 +276,16 @@ float noise2DCloud(in vec2 coord, in vec2 offset, float size) {
 }
 
 const float cloudAltitude = 140.0;
-const float cloudDepth    = 22.5;
+const float cloudDepth    = 25.0;
 
 float cloudDensity(vec3 pos) {
-    float size = 0.07;
+    float size = 0.1;
     vec2 coord = pos.xz;
     float height = heightDensity(pos, cloudAltitude+cloudDepth, 0.0) - heightDensity(pos, cloudAltitude, 0.0);
 
     float windAnim = frameTimeCounter;
     vec2 wind = vec2(windAnim)*vec2(1.0, 0.0);
-        wind *= 1.0;
+        wind *= 0.12;
     
     float noise;
     noise = noise2DCloud(coord, wind, 0.25*size);
@@ -299,13 +299,13 @@ float cloudTransmittance(vec3 pos, vec3 dir, const int steps, float depth) {
         dir         = normalize(mat3(gbufferModelViewInverse)*dir);
     float rStep     = depth/steps;
     vec3 rayStep    = dir*rStep;
-        pos        += vec3(0.25)*ditherDynamic + rayStep;
-    float transmittance = 0.8;
+        pos        += vec3(0.5) + rayStep;
+    float transmittance = 1.0;
     float sampleMod = (10/10)*0.2+0.8;
     for (int i = 0; i<steps; ++i, pos += rayStep) {
         transmittance += cloudDensity(pos);
     }
-    return exp(-transmittance * 0.4 * rStep);
+    return exp(-transmittance * 0.22 * rStep);
 }
 vec3 cloudRayPos(float depth, float mod) {
     float d     = depthExp(depth);
@@ -324,7 +324,7 @@ void volumetricClouds() {
     float rayStart  = far - 14.0;
     const int samples = 60;
     float rayStep   = far/samples;
-    float rayMax    = 600.0/far;
+    float rayMax    = 500.0/far;
     float rayDepth  = rayStart;
         rayDepth   -= rayStep*dither;
 
@@ -337,7 +337,7 @@ void volumetricClouds() {
     float cloudLight = 0.0;
     vec3 cloudColor = vec3(1.0);
 
-    vec3 lightColor = lcol.sunlight*5.0;
+    vec3 lightColor = lcol.sunlight*3.0;
     vec3 rayleighColor = lcol.skylight*0.3+lightColor*0.01;
 
     for (int i = 0; i<samples; i++) {
