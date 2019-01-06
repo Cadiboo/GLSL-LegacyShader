@@ -124,6 +124,7 @@ struct lightColors {
 
 struct bufferOutput {
     vec4 vFog;
+    vec4 vCloud;
 } bout;
 
 vec3 returnColor;
@@ -267,6 +268,105 @@ void simpleFog() {
     returnColor     = mix(returnColor, fogColor, falloff*saturateFLOAT(mask.solid+mask.translucency));
 }
 
+float noise2DCloud(in vec2 coord, in vec2 offset, float size) {
+    coord += offset;
+    coord = ceil(coord*size);
+    coord /= noiseTextureResolution;
+    return texture2D(noisetex, coord).x*2.0-1.0;
+}
+
+const float cloudAltitude = 140.0;
+const float cloudDepth    = 25.0;
+
+float cloudDensity(vec3 pos) {
+    float size = 0.1;
+    vec2 coord = pos.xz;
+    float height = heightDensity(pos, cloudAltitude+cloudDepth, 0.0) - heightDensity(pos, cloudAltitude, 0.0);
+
+    float windAnim = frameTimeCounter;
+    vec2 wind = vec2(windAnim)*vec2(1.0, 0.0);
+        wind *= 0.12;
+    
+    float noise;
+    noise = noise2DCloud(coord, wind, 0.25*size);
+    noise += noise2DCloud(coord, wind, 1.0*size)*0.25;
+    //noise += noise2DCloud(coord*4.0, wind*4.0)*0.25;
+    //noise *= noise2DCloud(coord*4.0, wind*4.0)*0.5+0.5;
+    return clamp(ceil(noise)*height, 0.0, 1.0);
+}
+
+float cloudTransmittance(vec3 pos, vec3 dir, const int steps, float depth) {
+        dir         = normalize(mat3(gbufferModelViewInverse)*dir);
+    float rStep     = depth/steps;
+    vec3 rayStep    = dir*rStep;
+        pos        += vec3(0.5) + rayStep;
+    float transmittance = 1.0;
+    float sampleMod = (10/10)*0.2+0.8;
+    for (int i = 0; i<steps; ++i, pos += rayStep) {
+        transmittance += cloudDensity(pos);
+    }
+    return exp(-transmittance * 0.22 * rStep);
+}
+vec3 cloudRayPos(float depth, float mod) {
+    float d     = depthExp(depth);
+    vec4 vPos   = screenSpacePos(d);
+    vec4 wPos   = gbufferModelViewInverse*vPos;
+        wPos.xyz *= mod;
+        wPos.xyz += pos.camera.xyz;
+    return wPos.xyz;
+}
+
+void volumetricClouds() {
+    vec4 wPos       = pos.worldSpace;
+    //float altitude  = cloudLimitLow*0.5 + cloudLimitHigh*0.5;
+    float density   = 100.0;
+    float dither    = ditherDynamic;
+    float rayStart  = far - 14.0;
+    const int samples = 60;
+    float rayStep   = far/samples;
+    float rayMax    = 500.0/far;
+    float rayDepth  = rayStart;
+        rayDepth   -= rayStep*dither;
+
+    float cloud     = 0.0;
+
+    float scatter   = 0.01;
+    float transmittance = 1.0;
+    float scatterCoefficient = 1.0;
+    float transmittanceCoefficient = 0.04;
+    float cloudLight = 0.0;
+    vec3 cloudColor = vec3(1.0);
+
+    vec3 lightColor = lcol.sunlight*3.0;
+    vec3 rayleighColor = lcol.skylight*0.3+lightColor*0.01;
+
+    for (int i = 0; i<samples; i++) {
+        if (rayDepth>0.0) {
+            vec3 rayPos     = cloudRayPos(rayDepth, rayMax);
+                //rayPos.y    = clamp(rayPos.y, 100.0, 120.0);
+            float oD        = cloudDensity(rayPos);
+            float rayDist   = mix(0.0, length(rayPos-pos.camera), mask.solid);
+            float worldDist = length(pos.worldSpace.xyz-pos.camera);
+            if (oD>0.0 && rayDist<worldDist) {
+            cloud          += oD;
+            cloudLight      = cloudTransmittance(rayPos, vec.light, 3, cloudDepth);
+            scatter         = scatterCoefficient*transmittance*oD*cloudLight;
+            transmittance  *= exp(-oD * transmittanceCoefficient);
+            } else {
+                cloud      += 0.0;
+            }
+            rayDepth       -= rayStep;
+        } else {
+            break;
+        }
+    }
+    cloud          /= samples;
+    cloudColor      = mix(rayleighColor, lightColor, scatter);
+    cloud           = clamp(cloud*density, 0.0, 1.0);
+    bout.vCloud     = vec4(cloudColor, cloud);
+    //returnColor = mix(returnColor, cloudColor, (cloud));
+}
+
 void main() {
     cbuffer.albedo  = texture2D(colortex0, texcoord);
     cbuffer.normal  = texture2D(colortex1, texcoord).rgb*2.0-1.0;
@@ -310,10 +410,13 @@ void main() {
         #endif
     #endif
 
+    volumetricClouds();
+
     //returnColor = vec3(shading.lit);
 
-    /* DRAWBUFFERS:025 */
+    /* DRAWBUFFERS:0256 */
     gl_FragData[0]  = vec4(returnColor, 1.0);
     gl_FragData[1]  = vec4(mask.terrain, mask.hand, mask.translucency, 1.0);
     gl_FragData[2]  = bout.vFog;
+    gl_FragData[3]  = bout.vCloud;
 }

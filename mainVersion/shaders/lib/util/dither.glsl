@@ -15,11 +15,13 @@ float ditherGradNoise(){
 } 
 
 float ditherGradNoiseTemporal(){
-    return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y +0.00623715 *(frameCounter/1)));
+    return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y +0.00623715 *(frameCounter)));
 }
 
+float bayer64s          = bayer64(gl_FragCoord.xy);
+float bayer64t          = fract(bayer64s + frameCounter/8.0);
 float ditherStatic      = ditherGradNoise();
-float ditherTemporal    = fract(bayer64(gl_FragCoord.xy) + frameCounter/8.0);
+float ditherTemporal    = ditherGradNoiseTemporal();
 #ifdef TAA
 float ditherDynamic     = ditherTemporal;
 #else

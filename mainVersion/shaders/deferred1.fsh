@@ -228,6 +228,69 @@ void skyStars(){
     returnColor += mix(vec3(0.0), colorStar*0.1, star*(timeNight*0.3+timeMoon*0.7)*(1-mask.solid));
 }
 
+float noise2DCloud(in vec2 coord, in vec2 offset) {
+    coord += offset;
+    coord = ceil(coord);
+    coord /= noiseTextureRes;
+    return texture2D(noisetex, coord).x*2.0-1.0;
+}
+
+float cloudCirrusDensity(vec2 coord) {
+    float noise;
+    float windAnim = frameTimeCounter;
+    vec2 wind = vec2(windAnim)*vec2(1.0, 0.0);
+        wind *= 0.12;
+
+    noise += noise2DCloud(coord*0.5, wind*0.5);
+    noise += noise2DCloud(coord*2.0, wind*2.0)*0.25;
+    //noise += noise2DCloud(coord*4.0, wind*4.0)*0.25;
+    //noise *= noise2DCloud(coord*4.0, wind*4.0)*0.5+0.5;
+    return clamp(ceil(noise), 0.0, 1.0);
+}
+
+void cloud2D(in float alpha) {
+    vec3 wPos = pos.worldSpace.xyz;
+        wPos -= cameraPosition.xyz;
+    vec3 wPosAbs = pos.worldSpace.xyz;
+    vec3 wVec = normalize(wPos);
+
+    float cloudHeight = 800.0;
+    float alphaMix = 1.0;
+
+    if (alpha < 0.1) {
+        if(wPos.y>0 && pos.camera.y<cloudHeight) {
+            alphaMix = 1.0;
+        } else if(wPos.y<0 && pos.camera.y>cloudHeight) {
+            alphaMix = 1.0;
+        } else {
+            alphaMix =0.0;
+        }
+    } else if (alpha > 0.9) {
+        if(wPosAbs.y>cloudHeight && pos.camera.y<cloudHeight) {
+            alphaMix = 1.0;
+        } else if(wPosAbs.y<cloudHeight && pos.camera.y>cloudHeight) {
+            alphaMix = 1.0;
+        } else {
+            alphaMix = 0.0;
+        }
+    }
+
+    float noise;
+
+    if (alphaMix > 0.9) {
+        float size = 20.0;
+        vec3 planeIntersect = wVec*((cloudHeight-pos.camera.y)/wVec.y)*0.2;
+        vec2 coord = pos.camera.xz*0.2+planeIntersect.xz;
+        coord /= size;
+        noise = cloudCirrusDensity(coord);
+    }
+
+    vec3 cloudDiffuse = vec3(1.0);
+    vec3 result = cloudDiffuse;
+    float cloudAlpha = clamp(noise*alphaMix*(1-horizonGrad*5), 0.0, 1.0);
+    returnColor = mix(returnColor, result, pow2(cloudAlpha));
+}
+
 void main() {
     cbuffer.albedo  = texture2D(colortex0, texcoord);
     cbuffer.normal  = texture2D(colortex1, texcoord).rgb*2.0-1.0;
@@ -259,6 +322,7 @@ void main() {
 
     skyGradient();
     skyStars();
+    //cloud2D(mask.solid);
 
     /* DRAWBUFFERS:0 */
     gl_FragData[0]  = vec4(returnColor, 1.0);

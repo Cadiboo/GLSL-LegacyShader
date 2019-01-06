@@ -58,3 +58,16 @@ vec2(0.4476317f, 0.8603768f),
 vec2(0.9842657f, 0.03520538f),
 vec2(0.9567313f, 0.280978f),
 vec2(0.755792f, 0.6508092f));
+
+vec4 poisson(sampler2D tex, float sigma, int samples) {
+    vec2 pixelRad = sigma/vec2(viewWidth, viewHeight);
+    vec2 coord = texcoord;
+    vec4 col = vec4(0.0);
+
+    for (int i = 0; i<samples; i++) {
+        vec2 bcoord = coord + poissonOffsets[i*(60/samples)]*pixelRad;
+        col += texture2D(tex, bcoord);
+    }
+    col /= samples;
+    return col;
+}
