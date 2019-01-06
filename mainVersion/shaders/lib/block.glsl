@@ -26,6 +26,7 @@ struct blockIdStruct {
     float glowstone;
     float seaLantern;
     float water;
+    float glassStain;
 } block;
 
 void idSetup() {
@@ -47,6 +48,7 @@ void idSetup() {
     block.lavaFlow=11.0;
     block.seaLantern=169.0;
     block.water=999.0;
+    block.glassStain=95.0;
 
     isOnGround = (gl_MultiTexCoord0.t < mc_midTexCoord.t);
 
