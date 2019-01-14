@@ -299,13 +299,13 @@ float cloudTransmittance(vec3 pos, vec3 dir, const int steps, float depth) {
         dir         = normalize(mat3(gbufferModelViewInverse)*dir);
     float rStep     = depth/steps;
     vec3 rayStep    = dir*rStep;
-        pos        += vec3(0.25)*ditherDynamic + rayStep;
-    float transmittance = 0.8;
+        pos        += vec3(0.5) + rayStep;
+    float transmittance = 1.0;
     float sampleMod = (10/10)*0.2+0.8;
     for (int i = 0; i<steps; ++i, pos += rayStep) {
         transmittance += cloudDensity(pos);
     }
-    return exp(-transmittance * 0.4 * rStep);
+    return exp(-transmittance * 0.16 * rStep);
 }
 vec3 cloudRayPos(float depth, float mod) {
     float d     = depthExp(depth);
@@ -319,7 +319,7 @@ vec3 cloudRayPos(float depth, float mod) {
 void volumetricClouds() {
     vec4 wPos       = pos.worldSpace;
     //float altitude  = cloudLimitLow*0.5 + cloudLimitHigh*0.5;
-    float density   = 100.0;
+    float density   = 70.0;
     float dither    = ditherDynamic;
     float rayStart  = far - 14.0;
     const int samples = 60;
@@ -330,15 +330,14 @@ void volumetricClouds() {
 
     float cloud     = 0.0;
 
-    float scatter   = 0.01;
-    float transmittance = 1.0;
-    float scatterCoefficient = 1.0;
-    float transmittanceCoefficient = 0.04;
+    float scatter   = 0.036;
+    float scatterCoefficient = 0.4;
+    float inscattering = 1.0;
     float cloudLight = 0.0;
     vec3 cloudColor = vec3(1.0);
 
     vec3 lightColor = lcol.sunlight*5.0;
-    vec3 rayleighColor = lcol.skylight*0.3+lightColor*0.01;
+    vec3 rayleighColor = lcol.skylight*0.3+lightColor*0.001;
 
     for (int i = 0; i<samples; i++) {
         if (rayDepth>0.0) {
@@ -349,9 +348,9 @@ void volumetricClouds() {
             float worldDist = length(pos.worldSpace.xyz-pos.camera);
             if (oD>0.0 && rayDist<worldDist) {
             cloud          += oD;
-            cloudLight      = cloudTransmittance(rayPos, vec.light, 3, cloudDepth);
-            scatter         = scatterCoefficient*transmittance*oD*cloudLight;
-            transmittance  *= exp(-oD * transmittanceCoefficient);
+            cloudLight      = cloudTransmittance(rayPos, vec.light, 6, cloudDepth);
+            inscattering    = 1.0-exp2(-oD * 2.0);
+            scatter         = mix(scatterCoefficient*cloudLight*inscattering, scatter, clamp(1-oD, 0.0, 1.0));
             } else {
                 cloud      += 0.0;
             }
@@ -361,7 +360,7 @@ void volumetricClouds() {
         }
     }
     cloud          /= samples;
-    cloudColor      = mix(rayleighColor, lightColor, scatter);
+    cloudColor      = mix(rayleighColor, lightColor, scatter*(1.0-timeLightTransition));
     cloud           = clamp(cloud*density, 0.0, 1.0);
     bout.vCloud     = vec4(cloudColor, cloud);
     //returnColor = mix(returnColor, cloudColor, (cloud));
