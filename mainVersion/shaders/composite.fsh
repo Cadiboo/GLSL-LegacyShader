@@ -245,7 +245,7 @@ void simpleFogLayer() {
     float density   = fogDensity;
         density    *= 0.005/fogDensity;
     float maxDensity = 0.24;
-    vec3 fogColor   = mix(lcol.sunlight*(1-timeLightTransition), colSkylight*sunlightLuma*(1.0+timeLightTransition), 0.2+timeNoon*0.7);
+    vec3 fogColor   = mix(lcol.sunlight*(1-timeLightTransition), colSkylight*sunlightLuma*(1.0+timeLightTransition), 0.06+timeNoon*0.7);
     float d         = length(pos.camera.xz-pos.worldSpace.xz)/far;
     float start     = 0.75;
     float smoothing = 0.5;
@@ -258,7 +258,7 @@ void simpleFogLayer() {
 void simpleFog() {
     float density   = fogDensity;
     float maxDensity = 0.08;
-    vec3 fogColor   = mix(lcol.sunlight*(1-timeLightTransition), colSkylight*sunlightLuma*(3.0+timeLightTransition), 0.2+timeNoon*0.7);
+    vec3 fogColor   = mix(lcol.sunlight*(1-timeLightTransition), colSkylight*sunlightLuma*(3.0+timeLightTransition), 0.06+timeNoon*0.7);
     float d         = length(pos.camera.xz-pos.worldSpace.xz)/far;
     float start     = 0.56-fogDensity*6.0;
     float smoothing = 0.75;
@@ -295,17 +295,18 @@ float cloudDensity(vec3 pos) {
     return clamp(ceil(noise)*height, 0.0, 1.0);
 }
 
-float cloudTransmittance(vec3 pos, vec3 dir, const int steps, float depth) {
+float cloudTransmittance(vec3 pos, const int steps, float depth) {
+    vec3 dir = mix(vec.light, vec.up, pow2(timeLightTransition));
         dir         = normalize(mat3(gbufferModelViewInverse)*dir);
     float rStep     = depth/steps;
     vec3 rayStep    = dir*rStep;
-        pos        += vec3(0.5) + rayStep;
+        pos        += vec3(1.0) + rayStep;
     float transmittance = 1.0;
     float sampleMod = (10/10)*0.2+0.8;
     for (int i = 0; i<steps; ++i, pos += rayStep) {
         transmittance += cloudDensity(pos);
     }
-    return exp(-transmittance * 0.16 * rStep);
+    return exp2(-transmittance * 0.16 * sampleMod * rStep);
 }
 vec3 cloudRayPos(float depth, float mod) {
     float d     = depthExp(depth);
@@ -319,7 +320,7 @@ vec3 cloudRayPos(float depth, float mod) {
 void volumetricClouds() {
     vec4 wPos       = pos.worldSpace;
     //float altitude  = cloudLimitLow*0.5 + cloudLimitHigh*0.5;
-    float density   = 70.0;
+    float density   = 50.0;
     float dither    = ditherDynamic;
     float rayStart  = far - 14.0;
     const int samples = 60;
@@ -330,14 +331,14 @@ void volumetricClouds() {
 
     float cloud     = 0.0;
 
-    float scatter   = 0.036;
+    float scatter   = 0.03;
     float scatterCoefficient = 0.4;
-    float inscattering = 1.0;
     float cloudLight = 0.0;
     vec3 cloudColor = vec3(1.0);
 
-    vec3 lightColor = lcol.sunlight*5.0;
-    vec3 rayleighColor = lcol.skylight*0.3+lightColor*0.001;
+    vec3 lightColor     = lcol.sunlight*5.0;
+        lightColor      = mix(lightColor, colSky*20.0, timeLightTransition);
+    vec3 rayleighColor  = lcol.skylight*0.4;
 
     for (int i = 0; i<samples; i++) {
         if (rayDepth>0.0) {
@@ -348,9 +349,8 @@ void volumetricClouds() {
             float worldDist = length(pos.worldSpace.xyz-pos.camera);
             if (oD>0.0 && rayDist<worldDist) {
             cloud          += oD;
-            cloudLight      = cloudTransmittance(rayPos, vec.light, 6, cloudDepth);
-            inscattering    = 1.0-exp2(-oD * 2.0);
-            scatter         = mix(scatterCoefficient*cloudLight*inscattering, scatter, clamp(1-oD, 0.0, 1.0));
+            cloudLight      = cloudTransmittance(rayPos, 6, cloudDepth);
+            scatter         = mix(scatterCoefficient*cloudLight, scatter, clamp(1-oD, 0.0, 1.0));
             } else {
                 cloud      += 0.0;
             }
@@ -360,7 +360,7 @@ void volumetricClouds() {
         }
     }
     cloud          /= samples;
-    cloudColor      = mix(rayleighColor, lightColor, scatter*(1.0-timeLightTransition));
+    cloudColor      = mix(rayleighColor, lightColor, scatter);
     cloud           = clamp(cloud*density, 0.0, 1.0);
     bout.vCloud     = vec4(cloudColor, cloud);
     //returnColor = mix(returnColor, cloudColor, (cloud));
@@ -392,6 +392,7 @@ void main() {
     pos.worldSpace  = worldSpacePos(depth.depth);
 
     bout.vFog       = vec4(0.0);
+    bout.vCloud     = vec4(0.0);
 
     returnColor = cbuffer.albedo.rgb;
 

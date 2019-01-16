@@ -2,7 +2,7 @@
 #include "lib/buffers.glsl"
 #include "lib/global.glsl"
 
-const float sunPathRotation     = -22.0;
+const float sunPathRotation     = -12.5;
 
 const int shadowMapResolution   = 3072;         //[512 1024 1536 2048 2560 3072 4096]
 const float shadowDistance      = 192.0;        //[96.0 128.0 160.0 192.0 224.0 256.0]

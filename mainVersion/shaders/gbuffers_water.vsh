@@ -1,7 +1,7 @@
 #version 130
 #include "lib/util/fastmath.glsl"
 
-const float sunPathRotation		= -22.0;
+const float sunPathRotation		= -12.5;
 const float pi = 3.14159265359;
 
 uniform float sunAngle;
