@@ -275,13 +275,15 @@ float noise2DCloud(in vec2 coord, in vec2 offset, float size) {
     return texture2D(noisetex, coord).x*2.0-1.0;
 }
 
-const float cloudAltitude = 140.0;
+const float cloudAltitude = 160.0;
 const float cloudDepth    = 22.5;
 
 float cloudDensity(vec3 pos) {
+    const float lowEdge = cloudAltitude-cloudDepth/2;
+    const float highEdge = cloudAltitude+cloudDepth/2;
     float size = 0.07;
     vec2 coord = pos.xz;
-    float height = heightDensity(pos, cloudAltitude+cloudDepth, 0.0) - heightDensity(pos, cloudAltitude, 0.0);
+    float height = heightDensity(pos, highEdge, 0.0) - heightDensity(pos, lowEdge, 0.0);
 
     float windAnim = frameTimeCounter;
     vec2 wind = vec2(windAnim)*vec2(1.0, 0.0);
@@ -292,7 +294,7 @@ float cloudDensity(vec3 pos) {
     noise += noise2DCloud(coord, wind, 1.0*size)*0.25;
     //noise += noise2DCloud(coord*4.0, wind*4.0)*0.25;
     //noise *= noise2DCloud(coord*4.0, wind*4.0)*0.5+0.5;
-    return clamp(ceil(noise)*height, 0.0, 1.0);
+    return clamp(ceil(noise)*height, 0.0, 1.0)*12;
 }
 
 float cloudTransmittance(vec3 pos, const int steps, float depth) {
@@ -306,7 +308,7 @@ float cloudTransmittance(vec3 pos, const int steps, float depth) {
     for (int i = 0; i<steps; ++i, pos += rayStep) {
         transmittance += cloudDensity(pos);
     }
-    return exp2(-transmittance * 0.16 * sampleMod * rStep);
+    return exp2(-transmittance * 0.03 * sampleMod * rStep);
 }
 vec3 cloudRayPos(float depth, float mod) {
     float d     = depthExp(depth);
@@ -318,6 +320,9 @@ vec3 cloudRayPos(float depth, float mod) {
 }
 
 void volumetricClouds() {
+    const float lowEdge = cloudAltitude-cloudDepth/2;
+    const float highEdge = cloudAltitude+cloudDepth/2;
+
     vec4 wPos       = pos.worldSpace;
     //float altitude  = cloudLimitLow*0.5 + cloudLimitHigh*0.5;
     float density   = 50.0;
@@ -343,16 +348,17 @@ void volumetricClouds() {
     for (int i = 0; i<samples; i++) {
         if (rayDepth>0.0) {
             vec3 rayPos     = cloudRayPos(rayDepth, rayMax);
-                //rayPos.y    = clamp(rayPos.y, 100.0, 120.0);
-            float oD        = cloudDensity(rayPos);
-            float rayDist   = mix(0.0, length(rayPos-pos.camera), mask.solid);
-            float worldDist = length(pos.worldSpace.xyz-pos.camera);
-            if (oD>0.0 && rayDist<worldDist) {
-            cloud          += oD;
-            cloudLight      = cloudTransmittance(rayPos, 6, cloudDepth);
-            scatter         = mix(scatterCoefficient*cloudLight, scatter, clamp(1-oD, 0.0, 1.0));
-            } else {
-                cloud      += 0.0;
+
+            if (rayPos.y>lowEdge && rayPos.y<highEdge) {
+                float oD        = cloudDensity(rayPos);
+                float rayDist   = mix(0.0, length(rayPos-pos.camera), mask.solid);
+                float worldDist = length(pos.worldSpace.xyz-pos.camera);
+
+                if (oD>0.01 && rayDist<worldDist) {
+                    cloud          += oD;
+                    cloudLight      = cloudTransmittance(rayPos, 6, cloudDepth);
+                    scatter         = mix(scatterCoefficient*cloudLight, scatter, clamp(1-oD, 0.0, 1.0));
+                }
             }
             rayDepth       -= rayStep;
         } else {
@@ -362,8 +368,34 @@ void volumetricClouds() {
     cloud          /= samples;
     cloudColor      = mix(rayleighColor, lightColor, scatter);
     cloud           = clamp(cloud*density, 0.0, 1.0);
+    if (cameraPosition.y<lowEdge && mask.translucency>0.5) {
+        cloudColor *= mix(vec3(1.0), normalize(cbuffer.albedo.rgb), 1.0);
+    }
     bout.vCloud     = vec4(cloudColor, cloud);
     //returnColor = mix(returnColor, cloudColor, (cloud));
+}
+
+void cloudVolumetricVanilla() {
+    const int samples = 6;
+    const float lowEdge = cloudAltitude-cloudDepth/2;
+    const float highEdge = cloudAltitude+cloudDepth/2;
+    float dither    = ditherDynamic;
+    vec3 rayStart   = gbufferModelViewInverse[3].xyz;
+        //rayStart.y  = clamp(rayStart.y, lowEdge, highEdge);
+    vec3 rayEnd     = pos.worldSpace.xyz-cameraPosition.xyz;
+        //rayStart.y  = clamp(rayStart.y, lowEdge, highEdge);
+    vec3 rayStep    = (rayEnd-rayStart)/samples;
+    vec3 rayPos     = rayStart + rayStep * vec3(1.0, dither, 1.0);
+
+    float cloud     = 0.0;
+
+    for (int i = 0; i<samples; i++) {
+        float oD    = cloudDensity(rayPos);
+
+        cloud      +=  oD;
+        rayPos     += rayStep;
+    }
+    returnColor     = mix(returnColor, vec3(10.0), clamp(cloud, 0.0, 1.0));
 }
 
 void main() {
@@ -410,7 +442,10 @@ void main() {
         #endif
     #endif
 
-    volumetricClouds();
+    #ifdef setCloudVolume
+        volumetricClouds();
+        //cloudVolumetricVanilla();
+    #endif
 
     //returnColor = vec3(shading.lit);
 

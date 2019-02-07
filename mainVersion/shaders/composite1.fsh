@@ -23,7 +23,7 @@ void main() {
     float weather = texture2D(colortex4, texcoord).g;
     //col.rgb = vec3(0.0);
 
-    #ifdef volCloud
+    #ifdef setCloudVolume
     #ifdef vCloudHqFilter
         #ifdef TAA
         vec4 vCloud = gauss25(colortex6, 2.0);
@@ -38,7 +38,7 @@ void main() {
         #endif
     #endif
         vCloud.rgb += weather*0.7;
-        col.rgb = mix(col.rgb, vCloud.rgb, pow2(saturateFLOAT(vCloud.a))*(1-translucency*0.5));
+        col.rgb = mix(col.rgb, vCloud.rgb, pow2(saturateFLOAT(vCloud.a)));
 
     #endif
 
