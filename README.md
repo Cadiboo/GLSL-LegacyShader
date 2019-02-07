@@ -1,2 +1,0 @@
-# GLSL-LegacyShader
-WIP
