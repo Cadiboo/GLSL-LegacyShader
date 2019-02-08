@@ -375,27 +375,104 @@ void volumetricClouds() {
     //returnColor = mix(returnColor, cloudColor, (cloud));
 }
 
-void cloudVolumetricVanilla() {
-    const int samples = 6;
+float cloudDensityPlane(vec3 pos) {
     const float lowEdge = cloudAltitude-cloudDepth/2;
     const float highEdge = cloudAltitude+cloudDepth/2;
-    float dither    = ditherDynamic;
-    vec3 rayStart   = gbufferModelViewInverse[3].xyz;
-        //rayStart.y  = clamp(rayStart.y, lowEdge, highEdge);
-    vec3 rayEnd     = pos.worldSpace.xyz-cameraPosition.xyz;
-        //rayStart.y  = clamp(rayStart.y, lowEdge, highEdge);
-    vec3 rayStep    = (rayEnd-rayStart)/samples;
-    vec3 rayPos     = rayStart + rayStep * vec3(1.0, dither, 1.0);
+    float size = 0.07;
+    vec2 coord = pos.xz;
+    float height = heightDensity(pos, highEdge, 0.0) - heightDensity(pos, lowEdge, 0.0);
 
-    float cloud     = 0.0;
+    float windAnim = frameTimeCounter;
+    vec2 wind = vec2(windAnim)*vec2(1.0, 0.0);
+        wind *= 1.0;
+    
+    float noise;
+    noise = noise2DCloud(coord, wind, 0.25*size);
+    noise += noise2DCloud(coord, wind, 0.5*size)*0.5;
+    //noise += noise2DCloud(coord*4.0, wind*4.0)*0.25;
+    //noise *= noise2DCloud(coord*4.0, wind*4.0)*0.5+0.5;
+    return clamp(ceil(noise)*height, 0.0, 1.0);
+}
+float cloudShading(vec3 pos, const int steps, float depth) {
+    vec3 dir = mix(vec.light, vec.up, pow2(timeLightTransition));
+        dir         = normalize(mat3(gbufferModelViewInverse)*dir);
+    float rStep     = depth/steps;
+    vec3 rayStep    = dir*rStep;
+        pos        += vec3(0.5) + rayStep;
+    float transmittance = 0.0;
+    for (int i = 0; i<steps; ++i, pos += rayStep) {
+        transmittance += cloudDensityPlane(pos);
+    }
+    return exp2(-transmittance * 0.3 * rStep);
+}
+
+void cloudVolumetricVanilla() {
+
+    const int samples       = 6;
+    const float lowEdge     = cloudAltitude-cloudDepth/2;
+    const float highEdge    = cloudAltitude+cloudDepth/2;
+
+    vec3 wPos   = pos.worldSpace.xyz;
+    vec3 wVec   = normalize(pos.worldSpace.xyz-pos.camera.xyz);
+
+    float heightStep    = cloudDepth/samples;
+    float height        = lowEdge;
+        height         += heightStep*ditherDynamic;
+
+    vec3 lightColor     = lcol.sunlight*5.0;
+        lightColor      = mix(lightColor, colSky*20.0, timeLightTransition);
+    vec3 rayleighColor  = lcol.skylight*0.4;
+
+    float cloud         = 0.0;
+    float shading       = 1.0;
+    float scatter       = 0.0;
+    float distanceFade  = 1.0;
+
+    bool isCloudVisible = false;
+    bool isCloserThanLastStep = false;
+
+    float lastStepLength = 100000;
 
     for (int i = 0; i<samples; i++) {
-        float oD    = cloudDensity(rayPos);
 
-        cloud      +=  oD;
-        rayPos     += rayStep;
+    if (mask.solid < 0.5) {
+        isCloudVisible = (wPos.y>=pos.camera.y && pos.camera.y<=height) || 
+        (wPos.y<=pos.camera.y && pos.camera.y>=height);
+    } else if (mask.solid > 0.5) {
+        isCloudVisible = (wPos.y>=height && pos.camera.y<=height) || 
+        (wPos.y<=height && pos.camera.y>=height);
     }
-    returnColor     = mix(returnColor, vec3(10.0), clamp(cloud, 0.0, 1.0));
+
+    if (isCloudVisible) {
+        vec3 getPlane   = wVec*((height-pos.camera.y)/wVec.y);
+        vec3 coord      = pos.camera.xyz+getPlane;
+        float oD        = cloudDensityPlane(coord);
+
+        float currStepLength = length(coord-pos.camera);
+
+        distanceFade    = 1.0-smoothstep(currStepLength, 1000.0, 1800.0);
+
+        isCloserThanLastStep = (currStepLength<lastStepLength) && oD>0.02;
+
+        if (distanceFade>0.01) {
+            cloud          += oD*distanceFade;
+
+            if (isCloserThanLastStep) {
+                shading         = cloudShading(coord, 5, cloudDepth);
+                scatter        += shading*0.2*oD;
+            }
+        }
+        
+        if (oD>0.01) lastStepLength  = currStepLength;
+    }
+
+        height         += heightStep;
+    }
+    vec3 color = mix(rayleighColor, lightColor, scatter);
+    cloud   = clamp(cloud, 0.0, 1.0);
+    //returnColor         = mix(returnColor, color, cloud);
+    bout.vCloud         = vec4(color, cloud);
+
 }
 
 void main() {
@@ -443,8 +520,8 @@ void main() {
     #endif
 
     #ifdef setCloudVolume
-        volumetricClouds();
-        //cloudVolumetricVanilla();
+        //volumetricClouds();
+        cloudVolumetricVanilla();
     #endif
 
     //returnColor = vec3(shading.lit);

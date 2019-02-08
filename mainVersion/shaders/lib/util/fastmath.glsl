@@ -10,10 +10,13 @@ float pow4(float x) {
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
+/*
 float smoothstep(float x, float low, float high) {
-    float t = clamp((x-low)/(high-low), 0.0, 1.0);
-    return t*t*(3-2*t);
-}
+    float t = saturateF((x-low)/(high-low));
+    return pow2(t)*(3-2*t);
+}*/
+#define smoothstep(x, low, high) smoothstep(low, high, x)
+
 float saturateFLOAT(float x) {
     return clamp(x, 0.0, 1.0);
 }
