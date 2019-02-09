@@ -18,10 +18,10 @@ vec3 returnCol;
 float returnAlpha;
 
 void main() {
-    vec4 fragSample     = texture2D(texture, coord)*col;
+    vec4 fragSample     = texture2D(texture, coord);
         returnCol       = toLinear(fragSample.rgb);
 
-        returnCol       = mix(vec3(1.0), returnCol, translucency);
+        returnCol       = mix(vec3(1.0), returnCol, max(translucency, water));
         returnAlpha     = fragSample.a;
 
     gl_FragColor = vec4(returnCol, returnAlpha);

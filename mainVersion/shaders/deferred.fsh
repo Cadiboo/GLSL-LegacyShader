@@ -18,6 +18,9 @@ const float sunPathRotation     = -12.5;
 const float sunlightLum     = 20.0;
 const float skylightLum     = 2.2;
 
+const vec3 minLightCol      = vec3(0.5);
+const float minLightLum     = 0.03;
+
 const vec3 lightColor       = vec3(1.0, 0.42, 0.0);
 const float lightLum        = 1.0;
 
@@ -256,7 +259,7 @@ vec4 gauss25sharp(sampler2DShadow tex, vec3 coord, float sigma) {
 
 void shadowDynamic() {
     float shade     = 1.0;
-    vec3 shadowcol  = vec3(1.0);
+    vec4 shadowcol  = vec4(1.0);
 
     const bool shadowFilter = setShadowFilter;
     const bool softShadow   = setShadowFilterMode;
@@ -294,15 +297,19 @@ void shadowDynamic() {
             if (shadowFilter) {
                 if (softShadow) {
                     shade   = gauss25shadow(shadowtex1, wPos.xyz, blurRadius*filterFactor).x;
+                    shadowcol = gauss25shadow(shadowcolor0, wPos.xyz, blurRadius*filterFactor);
                 } else {
                     shade   = gauss25sharp(shadowtex1, wPos.xyz, 0.00005*filterFactor).x;
+                    shadowcol = gauss25shadow(shadowcolor0, wPos.xyz, 0.00005*filterFactor);
                 }
             } else {
                 shade   = shadow2D(shadowtex1, wPos.xyz).x;
+                shadowcol = shadow2D(shadowcolor0, wPos.xyz);
             }
         }
     }
     shading.shadow  = shade;
+    shading.shadowcol = mix(vec3(1.0), shadowcol.rgb, shadowcol.a);
 }
 #endif
 
@@ -313,20 +320,25 @@ void artificialLight() {
 }
 
 void applyShading() {
+    shading.skylight = smoothstep(bData.lightmap.y, 0.18, 0.95);
+    shading.cave    = 1.0-smoothstep(bData.lightmap.y, 0.36, 0.6);
     shading.lit     = min(shading.shadow, shading.diffuse);
     shading.ao     *= shading.vanillaAO;
 
     vec3 foliageCol = mix(vec3(1.0), 0.5+normalize(bData.albedo), mat.foliage);
 
-    vec3 lightCol   = mix(light.sky*foliageCol, light.sun, shading.lit);
+    vec3 indirectLight = light.sky*foliageCol*shading.skylight;
+        indirectLight = mix(indirectLight, minLightCol*minLightLum, shading.cave);
+
+    vec3 lightCol   = mix(indirectLight, light.sun*shading.shadowcol, shading.lit);
         lightCol    = bLighten(lightCol, shading.light);
 
     returnCol      *= 1.0-mat.metallic;
-    vec3 shadingCol = mix(vec3(1.0), bData.albedo*normalize(bData.albedo), mat.metallic);
+    vec3 shadingCol = bData.albedo*normalize(bData.albedo)*mat.metallic;
 
-    shading.result  = lightCol*shadingCol;
+    shading.result  = lightCol*shading.ao;
     returnCol      *= shading.result;
-    returnCol      += shading.result*mat.metallic;
+    returnCol      += shadingCol*shading.result*mat.metallic;
 }
 
 void main() {
