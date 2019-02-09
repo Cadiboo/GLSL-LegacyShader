@@ -221,8 +221,8 @@ void main() {
     col.exposure = 1.0;
     filmic.shoulder  = 0.28;
     filmic.slope     = 0.64;
-    filmic.toe       = 0.07;
     filmic.angle     = 0.52;
+    filmic.toe       = 0.07;
     filmic.white     = 1.30;
 
     depth = texture2D(depthtex0, texcoord).r;

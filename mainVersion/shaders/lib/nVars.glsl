@@ -68,7 +68,7 @@ void nature() {
 
     vec3 skyNoon;
         skyNoon.r = 0.16;
-        skyNoon.g = 0.52;
+        skyNoon.g = 0.48;
         skyNoon.b = 1.0;
         skyNoon *= 0.16;
 
@@ -76,7 +76,7 @@ void nature() {
         skySunset.r = 0.25;
         skySunset.g = 0.56;
         skySunset.b = 1.0;
-        skySunset *= 0.08;
+        skySunset *= 0.1;
 
     vec3 skyNight;
         skyNight.r = 0.08;
@@ -91,25 +91,25 @@ void nature() {
         horizonSunrise.r = 0.24;
         horizonSunrise.g = 0.68;
         horizonSunrise.b = 1.0;
-        horizonSunrise *= 3.0;
+        horizonSunrise *= 0.5;
 
     vec3 horizonNoon;
-        horizonNoon.r = 0.52;
-        horizonNoon.g = 0.9;
+        horizonNoon.r = 0.42;
+        horizonNoon.g = 0.76;
         horizonNoon.b = 1.00;
-        horizonNoon *= 14.0;
+        horizonNoon *= 1.5;
 
     vec3 horizonSunset;
         horizonSunset.r = 0.18;
         horizonSunset.g = 0.66;
         horizonSunset.b = 1.0;
-        horizonSunset *= 3.8;
+        horizonSunset *= 0.65;
 
     vec3 horizonNight;
         horizonNight.r = 0.08;
         horizonNight.g = 0.5;
         horizonNight.b = 1.0;
-        horizonNight *= 0.28;
+        horizonNight *= 0.06;
 
     colHorizon = horizonSunrise*timeSunrise + horizonNoon*timeNoon + horizonSunset*timeSunset + horizonNight*timeNight;
     colHorizon *= (1-timeMoon*0.89);

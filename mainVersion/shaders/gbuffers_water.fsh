@@ -1,11 +1,15 @@
 #version 130
 #include "lib/global.glsl"
-#include "lib/buffer.glsl"
-#include "lib/util/math.glsl"
+#include "/lib/util/math.glsl"
 
-const float sunPathRotation     = -12.5;
+uniform sampler2D texture;
 
 #ifdef setShadowDynamic
+    uniform sampler2DShadow shadowtex0;
+    uniform sampler2DShadow shadowtex1;
+    uniform sampler2DShadow shadowcolor0;
+    uniform sampler2DShadow shadowcolor1;
+
     const int shadowMapResolution   = 3072;         //[512 1024 1536 2048 2560 3072 4096]
 
     const float shadowDistance      = 192.0;        //[96.0 128.0 160.0 192.0 224.0 256.0]
@@ -23,8 +27,6 @@ const float minLightLum     = 0.03;
 
 const vec3 lightColor       = vec3(1.0, 0.42, 0.0);
 const float lightLum        = 1.0;
-
-const float ambientOcclusionLevel = 1.0;
 
 uniform int frameCounter;
 uniform int isEyeInWater;
@@ -62,6 +64,9 @@ in float timeLightTransition;
 in float timeSun;
 
 in vec2 coord;
+in vec2 lmap;
+in vec3 nrm;
+in vec4 col;
 
 in vec3 sunVector;
 in vec3 moonVector;
@@ -75,8 +80,6 @@ struct bufferData {
     vec3 albedo;
     vec3 normal;
     vec2 lightmap;
-    float materials;
-    vec4 mask;
 } bData;
 
 struct depthData {
@@ -123,11 +126,38 @@ struct lightData {
 } light;
 
 vec3 returnCol  = vec3(0.0);
+float materialMask = 0.0;
 
+vec2 fragCoord  = gl_FragCoord.xy/vec2(viewWidth, viewHeight);
+
+#include "/lib/util/encode.glsl"
 #include "lib/util/depth.glsl"
-#include "lib/util/positions.glsl"
+
+vec4 screenSpacePos(float depth) {
+    vec4 posNDC = vec4(fragCoord.x*2.0-1.0, fragCoord.y*2.0-1.0, 2.0*depth-1.0, 1.0);
+    vec4 posCamSpace = gbufferProjectionInverse*posNDC;
+    return posCamSpace/posCamSpace.w;
+}
+vec4 screenSpacePos(float depth, vec2 coord) {
+    vec4 posNDC = vec4(coord.x*2.0-1.0, coord.y*2.0-1.0, 2.0*depth-1.0, 1.0);
+    vec4 posCamSpace = gbufferProjectionInverse*posNDC;
+    return posCamSpace/posCamSpace.w;
+}
+
+vec4 worldSpacePos(float depth) {
+    vec4 posCamSpace = screenSpacePos(depth);
+    vec4 posWorldSpace = gbufferModelViewInverse*posCamSpace;
+    posWorldSpace.xyz += cameraPosition.xyz;
+    return posWorldSpace;
+}
+vec4 worldSpacePos(float depth, vec2 coord) {
+    vec4 posCamSpace = screenSpacePos(depth, coord);
+    vec4 posWorldSpace = gbufferModelViewInverse*posCamSpace;
+    posWorldSpace.xyz += cameraPosition.xyz;
+    return posWorldSpace;
+}
+
 #include "lib/util/dither.glsl"
-#include "lib/util/decode.glsl"
 #include "lib/util/colorConversion.glsl"
 #include "lib/util/taaJitter.glsl"
 
@@ -144,68 +174,7 @@ void diffuseLambert() {
     vec3 light      = normalize(vec.light);
     float lambert   = dot(normal, light);
         lambert     = max(lambert, 0.0);
-    shading.diffuse = mix(lambert, 1.0, mat.foliage*0.8);
-}
-
-void dbao() {
-    float falloff       = smoothstep(depth.linear, 0.5, 0.8);
-    float ao            = 0.0;
-    float dither        = ditherDynamic;
-
-    #if setAOQuality==0
-        const int aoArea    = 3;
-        const int samples   = 2;
-    #elif setAOQuality==1
-        const int aoArea    = 3;
-        const int samples   = 3;
-    #elif setAOQuality==2
-        const int aoArea    = 4;
-        const int samples   = 4;
-    #endif
-
-    float size          = 2.0/samples;
-        size           *= dither;
-    const float piAngle = 22.0/(7.0*180.0);
-    float radius        = 0.6/samples;
-    float rot           = 180.0/aoArea*(dither+0.5);
-    vec2 scale          = vec2(1.0/aspectRatio,1.0) * gbufferProjection[1][1] / (2.74747742 * max(far*depth.linear,6.0));
-    float sd            = 0.0;
-    float angle         = 0.0;
-    float dist          = 0.0;
-
-    for (int i = 0; i<samples; i++) {
-        for (int j = 0; j<aoArea; j++) {
-            sd          = depthLin(texture2D(depthtex1, coord+vec2(cos(rot*piAngle), sin(rot*piAngle))*size*scale).r);
-            float samp  = far*(depth.linear-sd)/size;
-            angle       = clamp(0.5-samp, 0.0, 1.0);
-            dist        = clamp(0.0625*samp, 0.0, 1.0);
-            sd          = depthLin(texture2D(depthtex1, coord-vec2(cos(rot*piAngle), sin(rot*piAngle))*size*scale).r);
-            samp        = far*(depth.linear-sd)/size;
-            angle      += clamp(0.5-samp, 0.0, 1.0);
-            dist       += clamp(0.0625*samp, 0.0, 1.0);
-            ao         += clamp(angle+dist, 0.0, 1.0);
-            rot        += 180.0/aoArea;
-        }
-        rot    += 180.0/aoArea;
-        size   += radius;
-        angle   = 0.0;
-        dist    = 0.0;
-    }
-    ao         /= samples+aoArea;
-    ao          = ao*sqrt(ao);
-
-    #if setAOQuality==0
-        ao     *= 0.74;
-    #elif setAOQuality==1
-        ao     *= 0.54;
-    #elif setAOQuality==2
-        ao     *= 0.35;
-    #endif
-
-    ao          = clamp(ao, 0.0, 1.0);
-    ao          = ao*0.7+0.3;
-    ao          = mix(ao, 1.0, falloff);
-    shading.ao  = mix(1.0, ao, setAOint);
+    shading.diffuse = lambert;
 }
 
 void shadowStatic() {
@@ -213,7 +182,6 @@ void shadowStatic() {
     vec3 light      = normalize(vec.light);
     float lambert   = dot(normal, light);
         lambert     = max(lambert, 0.0);
-        lambert = mix(lambert, 1.0, mat.foliage*0.7);
         lambert = mix(lambert, 1.0, 0.5);
     shading.shadow = smoothstep(bData.lightmap.y, 0.93, 0.95)*lambert;
 }
@@ -232,7 +200,7 @@ void shadowDynamic() {
     float filterFactor      = 1.0;
 
     float distortion    = 0.0;
-    float offset        = 0.08 + float(softShadow)*0.0 + mat.foliage*0.2;
+    float offset        = 0.08 + float(softShadow)*0.0;
     float dist          = length(pos.screen.xyz);
 
     vec4 wPos   = vec4(0.0);
@@ -241,7 +209,7 @@ void shadowDynamic() {
         wPos        = pos.screen;
 
         #ifdef temporalAA
-            wPos    = screenSpacePos(depth.depth, taaJitter(coord, -0.5));
+            wPos    = screenSpacePos(depth.depth, taaJitter(fragCoord, -0.5));
         #endif
 
         wPos.xyz   += vec3(offset)*vec.light;
@@ -298,11 +266,9 @@ void shadowDynamic() {
 
 void artificialLight() {
     float lightmap  = getLightmap(bData.lightmap.x);
-    vec3 light      = mix(vec3(0.0), light.art, lightmap+mat.emissive*5.0);
+    vec3 light      = mix(vec3(0.0), light.art, lightmap);
     shading.light   = light;
 }
-
-uniform float sunAngle;
 
 void applyShading() {
     shading.skylight = smoothstep(bData.lightmap.y, 0.18, 0.95);
@@ -311,33 +277,23 @@ void applyShading() {
     shading.lit    *= 1.0-timeLightTransition;
     shading.ao     *= shading.vanillaAO;
 
-    vec3 foliageCol = mix(vec3(1.0), 0.5+normalize(bData.albedo), mat.foliage);
-
-    vec3 indirectLight = light.sky*foliageCol*shading.skylight;
+    vec3 indirectLight = light.sky*shading.skylight;
         indirectLight = mix(indirectLight, minLightCol*minLightLum, shading.cave);
 
     vec3 lightCol   = mix(indirectLight, light.sun*shading.shadowcol, shading.lit);
         lightCol    = bLighten(lightCol, shading.light);
 
-    returnCol      *= 1.0-mat.metallic;
-    vec3 shadingCol = bData.albedo*normalize(bData.albedo)*mat.metallic;
-
     shading.result  = lightCol*shading.ao;
     returnCol      *= shading.result;
-    returnCol      += shadingCol*shading.result*mat.metallic;
 }
 
 void main() {
-    vec4 inputSample = texture2D(colortex0, coord);
-    bData.albedo    = toLinear(inputSample.rgb);
-    bData.normal    = texture2D(colortex1, coord).rgb*2.0-1.0;
-    bData.lightmap  = texture2D(colortex2, coord).rg;
-    bData.materials = texture2D(colortex2, coord).b;
-    bData.mask      = texture2D(colortex3, coord);
+    vec4 inputSample = texture2D(texture, coord);
+    bData.albedo    = toLinear(inputSample.rgb)*col.rgb;
+    bData.normal    = nrm;
+    bData.lightmap  = lmap;
 
-    decodeBuffer();
-
-    depth.depth     = texture2D(depthtex1, coord).x;
+    depth.depth     = gl_FragCoord.z;
     depth.linear    = depthLin(depth.depth);
 
     pos.sun         = sunPosition;
@@ -367,18 +323,12 @@ void main() {
     shading.vanillaAO = 1.0;
     shading.result  = vec3(1.0);
 
-    if (mask.terrain > 0.5) {
         #ifdef setDiffuseShading
             diffuseLambert();
         #endif
 
-        #ifdef setAmbientOcclusion
-            dbao();
-        #endif
-
         #ifdef setUseVanillaAO
-            shading.vanillaAO = mix(inputSample.a, 1.0, mat.foliage);
-            shading.vanillaAO = mix(1.0, shading.vanillaAO, setVanillaAOint);
+            shading.vanillaAO = mix(1.0, inputSample.a, setVanillaAOint);
         #endif
 
         if (shading.diffuse > 0.0) {
@@ -390,10 +340,10 @@ void main() {
         }
         artificialLight();
         applyShading();
-    }
 
-    //returnCol       = shading.result;
-
-    /*DRAWBUFFERS:0*/
-    gl_FragData[0]  = toVec4(returnCol);
+    /*DRAWBUFFERS:0123*/
+    gl_FragData[0] = vec4(returnCol, inputSample.a);
+    gl_FragData[1] = toVec4(nrm*0.5+0.5);
+    gl_FragData[2] = vec4(lmap, materialMask, 1.0);
+    gl_FragData[3] = vec4(1.0, 1.0, 0.0, 1.0);
 }
