@@ -55,6 +55,7 @@ in vec3 colSunlight;
 in vec3 colSkylight;
 in vec3 colSky;
 in vec3 colHorizon;
+in vec3 colSunglow;
 
 struct bufferData {
     vec3 albedo;
@@ -134,47 +135,55 @@ void skyGradient() {
     float hBottom   = dot(hVec2, nFrag);
 
     float zenith    = dot(hVec2, nFrag);
-    float lowerFog  = smoothstep(hBottom, 0.42, 0.8);
-        lowerFog    = pow3(lowerFog)*0.7;
+    float horizonFade = linStep(hBottom, 0.3, 0.8);
+        horizonFade = pow4(horizonFade)*0.8;
+
+    float lowDome   = linStep(hBottom, 0.66, 0.71);
+        lowDome     = pow3(lowDome);
 
     float horizonGrad = 1.0-max(hBottom, hTop);
 
-    float horizon   = smoothstep(horizonGrad, 0.15, 0.31);
+    float horizon   = linStep(horizonGrad, 0.15, 0.31);
         horizon     = pow6(horizon);
 
     float sunGrad   = 1.0-dot(sgVec, nFrag);
     float moonGrad  = 1.0-dot(mgVec, nFrag);
 
-    float horizonGlow = saturateF(pow3(sunGrad));
-        horizonGlow = pow6(smoothstep(horizonGrad, 0.15-horizonGlow*0.15, 0.32-horizonGlow*0.05))*horizonGlow;
-        horizonGlow = pow2(horizonGlow*1.2);
+    float horizonGlow = saturateF(pow2(sunGrad));
+        horizonGlow = pow3(linStep(horizonGrad, 0.1-horizonGlow*0.1, 0.33-horizonGlow*0.05))*horizonGlow;
+        horizonGlow = pow2(horizonGlow*1.3);
         horizonGlow = saturateF(horizonGlow*0.75);
 
-    float sunGlow   = pow(sunGrad, 18.0);
-        sunGlow     = saturateF(sunGlow*1.05);
-        sunGlow    *= 1.0-timeNoon*0.6-0.2;
+    float sunGlow   = linStep(sunGrad, 0.7, 0.98);
+        sunGlow     = pow6(sunGlow);
+        sunGlow    *= 1.0-timeNoon*0.75-0.2;
 
     float moonGlow  = pow(moonGrad*0.85, 15.0);
         moonGlow    = saturateF(moonGlow*1.05)*0.8;
 
-    float sunAlbedo = smoothstep(sunGrad, 0.85, 0.95)*(1.0-timeMoon);
+    float sunLimb   = 1.0-linStep(hBottom, 0.68, 0.74);
+        sunLimb     = pow2(sunLimb);
+
+    float sunAlbedo = smoothstep(sunGrad, 0.85, 0.95)*(1.0-timeMoon)*sunLimb;
     float moonAlbedo = smoothstep(moonGrad, 0.85, 0.95)*timeNight;
 
-    vec3 sunColor   = colSunlight;
+    vec3 sunColor   = colSunglow*2.2;
+    vec3 sunLight   = colSunlight*2.2;
     vec3 moonColor  = vec3(0.66, 0.85, 1.0)*0.05;
 
-    vec3 albedoCol  = sunAlbedo*normalize(sunColor)*50.0 + moonAlbedo*normalize(moonColor)*3.0;
+    vec3 albedoCol  = sunAlbedo*normalize(sunLight)*50.0 + moonAlbedo*normalize(moonColor)*1.2;
 
-    vec3 skyColor   = mix(colSky*(1.0-timeMoon*0.89), colHorizon, lowerFog);
-        skyColor    = mix(skyColor, mix(sunColor, colHorizon*2.0, timeNoon*0.75), horizon*(1.0-timeMoon));
-        skyColor    = mix(skyColor, sunColor*5.0, saturateF(sunGlow+horizonGlow)*(1.0-timeNight));
+    vec3 skyColor   = mix(colSky*(1.0-timeMoon*0.89), colHorizon, horizonFade);
+        skyColor    = mix(skyColor, colSky*1.6+sunColor*0.8, lowDome);
+        skyColor    = mix(skyColor, mix(sunColor, colHorizon*2.0, timeNoon*0.85), horizon*(1.0-timeMoon));
+        skyColor    = mix(skyColor, sunColor*4.0+sunLight, saturateF(sunGlow+horizonGlow)*(1.0-timeNight));
         skyColor    = mix(skyColor, colHorizon, horizon*timeMoon*0.5);
         skyColor    = mix(skyColor, moonColor, moonGlow);
 
         skyColor   *= 4.5;
-        skyColor   += bData.albedo*albedoCol;
+        skyColor   += bData.albedo*albedoCol*2.0;
 
-    returnCol       = skyColor;
+    returnCol       = vec3(skyColor);
 }
 
 void skyStars(){

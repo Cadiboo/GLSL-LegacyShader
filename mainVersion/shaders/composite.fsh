@@ -162,12 +162,12 @@ float cloudShading(vec3 pos, const int steps, float depth) {
         dir         = normalize(mat3(gbufferModelViewInverse)*dir);
     float rStep     = depth/steps;
     vec3 rayStep    = dir*rStep;
-        pos        += vec3(0.5) + rayStep;
+        pos        += vec3(0.0) + rayStep;
     float transmittance = 0.0;
     for (int i = 0; i<steps; ++i, pos += rayStep) {
         transmittance += cloudDensityPlane(pos);
     }
-    return exp2(-transmittance * 0.3 * rStep);
+    return exp2(-transmittance * 0.2 * rStep);
 }
 
 void cloudVolumetricVanilla() {
@@ -179,9 +179,17 @@ void cloudVolumetricVanilla() {
     vec3 wPos   = worldSpacePos(depth.solid).xyz;
     vec3 wVec   = normalize(wPos-pos.camera.xyz);
 
+    bool isCorrectStepDir = pos.camera.y<cloudAltitude;
+
     float heightStep    = cloudDepth/samples;
-    float height        = lowEdge;
-        height         += heightStep*ditherDynamic;
+    float height;
+    if (isCorrectStepDir) {
+            height      = highEdge;
+            height     -= heightStep*ditherDynamic;
+    } else {
+            height      = lowEdge;
+            height     += heightStep*ditherDynamic;
+    }
 
     vec3 lightColor     = light.sun*5.0;
         lightColor      = mix(lightColor, colSky*20.0, timeLightTransition);
@@ -223,14 +231,17 @@ void cloudVolumetricVanilla() {
 
             if (isCloserThanLastStep) {
                 shading         = cloudShading(coord, 5, cloudDepth);
-                scatter        += shading*0.2*oD;
+                scatter         = mix(scatter, shading*0.2, oD);
             }
         }
         
         if (oD>0.01) lastStepLength  = currStepLength;
     }
-
-        height         += heightStep;
+        if (isCorrectStepDir) {
+        height         -= heightStep;
+        } else {
+        height         += heightStep; 
+        }
     }
     vec3 color          = mix(rayleighColor, lightColor, scatter);
 

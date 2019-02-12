@@ -50,6 +50,11 @@ float smoothstep(float x, float low, float high) {
 }*/
 #define smoothstep(x, low, high) smoothstep(low, high, x)
 
+float linStep(float x, float low, float high) {
+    float t = saturateF((x-low)/(high-low));
+    return t;
+}
+
 float getLuma(vec3 color) {
 	return dot(color,vec3(0.22, 0.687, 0.084));
 }

@@ -4,7 +4,11 @@ out vec3 colSunlight;
 out vec3 colSkylight;
 out vec3 colSky;
 out vec3 colHorizon;
+out vec3 colSunglow;
 out float fogDensity;
+
+uniform vec3 skyColor;
+uniform vec3 fogColor;
 
 void nature() {
     vec3 sunlightSunrise;
@@ -15,8 +19,8 @@ void nature() {
 
     vec3 sunlightNoon;
         sunlightNoon.r = 1.0;
-        sunlightNoon.g = 0.96;
-        sunlightNoon.b = 0.92;
+        sunlightNoon.g = 0.99;
+        sunlightNoon.b = 0.96;
         sunlightNoon *= 1.0;
 
     vec3 sunlightSunset;
@@ -60,17 +64,19 @@ void nature() {
     colSkylight = skylightSunrise*timeSunrise + skylightNoon*timeNoon + skylightSunset*timeSunset + skylightNight*timeNight;
     colSkylight *= 1-timeMoon*0.6;
 
-    vec3 skySunrise;
-        skySunrise.r = 0.28;
-        skySunrise.g = 0.59;
-        skySunrise.b = 1.0;
-        skySunrise *= 0.09;
+    vec3 skyVanilla = pow(skyColor, vec3(2.2));
 
-    vec3 skyNoon;
-        skyNoon.r = 0.16;
-        skyNoon.g = 0.48;
-        skyNoon.b = 1.0;
-        skyNoon *= 0.16;
+    vec3 skySunrise;
+        skySunrise.r = 0.24;
+        skySunrise.g = 0.56;
+        skySunrise.b = 1.0;
+        skySunrise *= 0.11;
+
+    vec3 skyNoon = skyVanilla;
+        //skyNoon.r = 0.16;
+        //skyNoon.g = 0.48;
+        //skyNoon.b = 1.0;
+        skyNoon *= 0.24;
 
     vec3 skySunset;
         skySunset.r = 0.25;
@@ -91,12 +97,12 @@ void nature() {
         horizonSunrise.r = 0.24;
         horizonSunrise.g = 0.68;
         horizonSunrise.b = 1.0;
-        horizonSunrise *= 0.5;
+        horizonSunrise *= 0.4;
 
-    vec3 horizonNoon;
-        horizonNoon.r = 0.42;
-        horizonNoon.g = 0.76;
-        horizonNoon.b = 1.00;
+    vec3 horizonNoon = pow(fogColor, vec3(2.2));
+        //horizonNoon.r = 0.42;
+        //horizonNoon.g = 0.76;
+        //horizonNoon.b = 1.00;
         horizonNoon *= 1.5;
 
     vec3 horizonSunset;
@@ -113,6 +119,33 @@ void nature() {
 
     colHorizon = horizonSunrise*timeSunrise + horizonNoon*timeNoon + horizonSunset*timeSunset + horizonNight*timeNight;
     colHorizon *= (1-timeMoon*0.89);
+
+    vec3 sunglowSunrise;
+        sunglowSunrise.r = 1.0;
+        sunglowSunrise.g = 0.14;
+        sunglowSunrise.b = 0.00;
+        sunglowSunrise *= 0.9;
+
+    vec3 sunglowNoon;
+        sunglowNoon.r = 0.56;
+        sunglowNoon.g = 0.74;
+        sunglowNoon.b = 1.0;
+        sunglowNoon *= 0.9;
+
+    vec3 sunglowSunset;
+        sunglowSunset.r = 1.0;
+        sunglowSunset.g = 0.08;
+        sunglowSunset.b = 0.0;
+        sunglowSunset *= 0.8;
+
+    vec3 sunglowNight;
+        sunglowNight.r = 0.08;
+        sunglowNight.g = 0.5;
+        sunglowNight.b = 1.0;
+        sunglowNight *= 0.004;
+
+    colSunglow = sunglowSunrise*timeSunrise + sunglowNoon*timeNoon + sunglowSunset*timeSunset + sunlightNight*timeNight;
+
 
     float fogBaseDensity = 0.011;
     fogBaseDensity *= 4.0*timeSunrise+0.8*timeNoon+1.0*timeSunset+2.2*timeNight;

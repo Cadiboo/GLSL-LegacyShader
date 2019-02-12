@@ -19,3 +19,4 @@
 
 //post process settings
 #define temporalAA
+#define setBloom

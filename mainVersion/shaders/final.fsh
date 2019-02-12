@@ -6,6 +6,7 @@ const float expMinimum      = 0.1;
 const float saturation      = 1.0;
 
 uniform sampler2D colortex0;
+uniform sampler2D colortex7;
 
 const bool colortex0MipmapEnabled = true;
 
@@ -23,6 +24,14 @@ struct sceneColorData {
 vec3 returnCol;
 float imageLuma;
 
+void autoExposureAdvanced() {
+    const float expMax  = 20.0;
+    const float expMin  = expMinimum;
+	    imageLuma = texture2D(colortex7, coord).a;
+        imageLuma = imageLuma*8.0;
+		imageLuma = clamp((imageLuma), expMin, expMax);
+	col.exposure = 1.0 - exp(-1.0/imageLuma);
+}
 void autoExposureNonTemporal() {
     const float expMax  = 20.0;
     const float expMin  = expMinimum;
@@ -30,6 +39,10 @@ void autoExposureNonTemporal() {
         imageLuma = exp(imageLuma*8.0);
 		imageLuma = clamp((imageLuma), expMin, expMax);
 	col.exposure = 1.0 - exp(-1.0/imageLuma);
+}
+void fixedExposure() {
+    float exposure = 25.0;
+    col.exposure   = 1.0 - exp(-1.0/exposure);
 }
 
 struct filmicTonemap {
@@ -78,7 +91,7 @@ void main() {
     filmic.range        = 0.30;
     filmic.white        = 1.30;
 
-    autoExposureNonTemporal();
+    autoExposureAdvanced();
     tonemapFilmic();
     colorGrading();
 

@@ -262,8 +262,8 @@ void shadowDynamic() {
             if (shadowFilter) {
                 #if setShadowFilterQuality==0
                     if (softShadow) {
-                        shade   = gauss25shadow(shadowtex1, wPos.xyz, blurRadius*filterFactor).x;
-                        shadowcol = gauss25shadow(shadowcolor0, wPos.xyz, blurRadius*filterFactor);
+                        shade   = gauss9shadow(shadowtex1, wPos.xyz, blurRadius*filterFactor).x;
+                        shadowcol = gauss9shadow(shadowcolor0, wPos.xyz, blurRadius*filterFactor);
                     } else {
                         shade   = gauss25sharp(shadowtex1, wPos.xyz, 0.00005*filterFactor).x;
                         shadowcol = gauss25shadow(shadowcolor0, wPos.xyz, 0.000025*filterFactor);

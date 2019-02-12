@@ -63,3 +63,15 @@ vec4 gauss49sharp(sampler2DShadow tex, vec3 coord, float sigma) {
     }
     return smoothstep(col, 0.4, 0.6);
 }
+vec4 gauss9shadowcol(sampler2DShadow tex, vec3 coord, float sigma) {
+    vec4 col = shadow2D(tex, coord);
+
+    for (int i = 0; i<9; i++) {
+        vec2 bcoord = coord.xy + (gauss9o[i]+temporalShadowDither())*sigma*0.5;
+        float bcoordZ = coord.z + (gauss9o[int(ceil(i/3.0))]-1.0).x*sigma*0.5;
+        vec4 temp = shadow2D(tex, vec3(bcoord, coord.z));
+        col.rgb = min(col.rgb, temp.rgb);
+        col.a   = max(col.a, temp.a);
+    }
+    return col;
+}
