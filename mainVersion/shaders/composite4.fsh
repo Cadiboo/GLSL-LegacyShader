@@ -57,13 +57,21 @@ void decodeBuffer() {
     mask.translucency = float(maskData > 2.5 && maskData < 3.5);
 }
 
+float getImageLuma(sampler2D tex) {
+    vec3 sample1 = textureLod(colortex0, vec2(0.5), ceil(log2(max(viewHeight, viewWidth)))).rgb;
+    vec3 sample2 = textureLod(colortex0, vec2(0.5), ceil(log2(max(viewHeight, viewWidth)))/1.5).rgb;
+
+    return getLuma((sample1+sample2*0.1));
+}
+
 void main() {
     vec3 returnCol  = texture2DLod(colortex0, coord, 0).rgb;
     float depth     = texture2DLod(depthtex1, coord, 0).x;
     depth           = mix(depth, pow(depth, 0.01), mask.hand);
 
-    float expCurrent    = texture2DLod(colortex7, vec2(0.5), log2(viewWidth*0.4)).a;
-    float expTarget     = length(texture2DLod(colortex0, vec2(0.5), log2(viewWidth*0.4)).rgb);
+    float expCurrent    = texture2DLod(colortex7, coord, 0).a;
+    float expTarget     = getImageLuma(colortex0);
+        expTarget       = clamp(expTarget, expMinimum, expMaximum);
     float expResult     = mix(expCurrent, expTarget, 0.025*(frameTime/0.033));
 
     vec2 taaCoord       = taaReprojection(coord, depth);

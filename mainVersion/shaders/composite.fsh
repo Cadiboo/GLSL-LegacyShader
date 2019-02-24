@@ -15,7 +15,7 @@ uniform sampler2D depthtex1;
 
 uniform sampler2D noisetex;
 
-const int noiseTextureResolution = 2048;
+const int noiseTextureResolution = 1024;
 const int noiseTextureRes = noiseTextureResolution;
 
 const float sunlightLum     = 20.0;
@@ -172,7 +172,7 @@ float cloudShading(vec3 pos, const int steps, float depth) {
 
 void cloudVolumetricVanilla() {
 
-    const int samples       = 6;
+    const int samples       = 10;
     const float lowEdge     = cloudAltitude-cloudDepth/2;
     const float highEdge    = cloudAltitude+cloudDepth/2;
 

@@ -10,7 +10,7 @@ uniform sampler2D depthtex1;
 
 uniform sampler2D noisetex;
 
-const int noiseTextureResolution = 2048;
+const int noiseTextureResolution = 1024;
 const int noiseTextureRes = noiseTextureResolution;
 
 const float sunlightLum     = 20.0;

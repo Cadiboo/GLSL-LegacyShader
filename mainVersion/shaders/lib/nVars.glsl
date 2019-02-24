@@ -147,7 +147,7 @@ void nature() {
     colSunglow = sunglowSunrise*timeSunrise + sunglowNoon*timeNoon + sunglowSunset*timeSunset + sunlightNight*timeNight;
 
 
-    float fogBaseDensity = 0.011;
-    fogBaseDensity *= 4.0*timeSunrise+0.8*timeNoon+1.0*timeSunset+2.2*timeNight;
+    float fogBaseDensity = 1.0;
+    fogBaseDensity *= 2.8*timeSunrise+0.8*timeNoon+1.0*timeSunset+2.2*timeNight;
     fogDensity = fogBaseDensity*fogDens;
 }

@@ -1,5 +1,6 @@
 #version 130
 #include "/lib/util/math.glsl"
+#include "/lib/global.glsl"
 
 out vec4 col;
 out vec2 coord;
@@ -24,6 +25,10 @@ void main() {
     matSetup();
 
     position        = ftransform();
+
+    #ifdef setWindEffect
+		windOcclusion   = linStep(lmap.y, 0.45, 0.8)*0.9+0.1;
+	#endif
 
     unpackPos();
     #ifdef setWindEffect

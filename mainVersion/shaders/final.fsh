@@ -1,7 +1,6 @@
 #version 130
 #include "lib/util/math.glsl"
-
-const float expMinimum      = 0.1;
+#include "lib/global.glsl"
 
 const float saturation      = 1.0;
 
@@ -25,10 +24,9 @@ vec3 returnCol;
 float imageLuma;
 
 void autoExposureAdvanced() {
-    const float expMax  = 20.0;
+    const float expMax  = expMaximum;
     const float expMin  = expMinimum;
 	    imageLuma = texture2D(colortex7, coord).a;
-        imageLuma = imageLuma*8.0;
 		imageLuma = clamp((imageLuma), expMin, expMax);
 	col.exposure = 1.0 - exp(-1.0/imageLuma);
 }
@@ -83,13 +81,13 @@ void main() {
     col.sdr         = col.hdr;
     col.exposure    = 1.0;
 
-    filmic.curve        = 0.28;
-    filmic.toe          = 0.52;
+    filmic.curve        = 0.22;
+    filmic.toe          = 0.76;
     filmic.slope        = 0.64;
-    filmic.angle        = 0.07;
+    filmic.angle        = 0.52;
     filmic.black        = 0.00;
-    filmic.range        = 0.30;
-    filmic.white        = 1.30;
+    filmic.range        = 0.52;
+    filmic.white        = 5.00;
 
     autoExposureAdvanced();
     tonemapFilmic();

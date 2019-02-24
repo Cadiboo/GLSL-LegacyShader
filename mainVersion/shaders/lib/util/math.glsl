@@ -1,5 +1,7 @@
 const float pi = 3.14159265358979323846;
 
+#define far16 256.0
+
 float pow2(float x) {
     return x*x;
 }
@@ -14,6 +16,12 @@ float pow5(float x) {
 }
 float pow6(float x) {
     return pow2(pow3(x));
+}
+float pow8(float x) {
+    return pow2(pow4(x));
+}
+float pow10(float x) {
+    return pow5(x)*pow5(x);
 }
 
 vec3 linCol(vec3 x) {
@@ -31,6 +39,9 @@ vec3 toVec3(vec4 x) {
 }
 float sumVec2(vec2 x) {
     return x.x+x.y;
+}
+float sumVec3(vec3 x) {
+    return x.x+x.y+x.z;
 }
 
 float saturateF(float x) {
@@ -59,6 +70,10 @@ float getLuma(vec3 color) {
 	return dot(color,vec3(0.22, 0.687, 0.084));
 }
 
+float vec3avg(vec3 x) {
+    return (x.r+x.g+x.b)/3.0;
+}
+
 float flatten(float x, float alpha) {
     return x*alpha+(1.0-alpha);
 }
@@ -85,4 +100,7 @@ float bLighten(float x, float blend) {
 }
 vec3 bLighten(vec3 x, vec3 blend) {
 	return vec3(bLighten(x.r, blend.r), bLighten(x.g, blend.g), bLighten(x.b, blend.b));
+}
+vec3 colorSat(vec3 x, float alpha) {
+    return mix(vec3(getLuma(x)), x, alpha);
 }
