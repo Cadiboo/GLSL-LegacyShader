@@ -174,7 +174,7 @@ vec4 rayPos(in float depth) {
 
 void fogVolumetric() {
     const float highEdge    = fogAltitude+fogSmoothing;
-    const int samples   = 8;
+    const int samples   = 6;
     float skyPhase      = dot(vec.view, vec.up)*0.5+0.5;
         skyPhase        = (1.0-linStep(skyPhase, 0.6, 1.0))*0.5+0.5;
         skyPhase        = mix(skyPhase, 1.0, 0.7*mask.terrain);
