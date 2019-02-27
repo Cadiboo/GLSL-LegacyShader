@@ -148,6 +148,6 @@ void nature() {
 
 
     float fogBaseDensity = 1.0;
-    fogBaseDensity *= 2.8*timeSunrise+0.8*timeNoon+1.0*timeSunset+2.2*timeNight;
+    fogBaseDensity *= 2.0*timeSunrise+1.4*timeNoon+1.0*timeSunset+2.2*timeNight;
     fogDensity = fogBaseDensity*fogDens;
 }
