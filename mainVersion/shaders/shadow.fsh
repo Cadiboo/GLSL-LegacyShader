@@ -17,12 +17,16 @@ in float translucency;
 vec3 returnCol;
 float returnAlpha;
 
+uniform int blockEntityId;
+
 void main() {
     vec4 fragSample     = texture2D(texture, coord);
         returnCol       = toLinear(fragSample.rgb);
 
         returnCol       = mix(vec3(1.0), returnCol, max(translucency, water));
         returnAlpha     = fragSample.a;
+
+    if (blockEntityId == 138) discard;
 
     gl_FragColor = vec4(returnCol, returnAlpha);
     gl_FragDepth = gl_FragCoord.z;
