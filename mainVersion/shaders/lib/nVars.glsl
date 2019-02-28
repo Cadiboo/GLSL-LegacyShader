@@ -33,7 +33,7 @@ void nature() {
         sunlightNight.r = 0.08;
         sunlightNight.g = 0.5;
         sunlightNight.b = 1.0;
-        sunlightNight *= 0.004;
+        sunlightNight *= 0.012;
 
     colSunlight = sunlightSunrise*timeSunrise + sunlightNoon*timeNoon + sunlightSunset*timeSunset + sunlightNight*timeNight;
 
@@ -59,7 +59,7 @@ void nature() {
         skylightNight.r = 0.08;
         skylightNight.g = 0.5;
         skylightNight.b = 1.0;
-        skylightNight *= 0.02;
+        skylightNight *= 0.03;
 
     colSkylight = skylightSunrise*timeSunrise + skylightNoon*timeNoon + skylightSunset*timeSunset + skylightNight*timeNight;
     colSkylight *= 1-timeMoon*0.6;
@@ -76,7 +76,7 @@ void nature() {
         //skyNoon.r = 0.16;
         //skyNoon.g = 0.48;
         //skyNoon.b = 1.0;
-        skyNoon *= 0.24;
+        skyNoon *= 0.21;
 
     vec3 skySunset;
         skySunset.r = 0.25;
@@ -103,7 +103,7 @@ void nature() {
         //horizonNoon.r = 0.42;
         //horizonNoon.g = 0.76;
         //horizonNoon.b = 1.00;
-        horizonNoon *= 1.5;
+        horizonNoon *= 1.4;
 
     vec3 horizonSunset;
         horizonSunset.r = 0.18;
@@ -147,7 +147,7 @@ void nature() {
     colSunglow = sunglowSunrise*timeSunrise + sunglowNoon*timeNoon + sunglowSunset*timeSunset + sunlightNight*timeNight;
 
 
-    float fogBaseDensity = 1.0;
-    fogBaseDensity *= 2.0*timeSunrise+1.4*timeNoon+1.0*timeSunset+2.2*timeNight;
+    float fogBaseDensity = 1.5;
+    fogBaseDensity *= 1.4*timeSunrise+1.0*timeNoon+1.0*timeSunset+0.9*timeNight;
     fogDensity = fogBaseDensity*fogDens;
 }

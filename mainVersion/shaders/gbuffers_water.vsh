@@ -11,6 +11,8 @@ out vec2 coord;
 out vec2 lmap;
 out vec3 nrm;
 
+out int water;
+
 uniform int frameCounter;
 uniform float viewWidth;
 uniform float viewHeight;
@@ -149,6 +151,12 @@ void main() {
         applyWind();
     #endif
     repackPos();
+
+    if (mc_Entity.x == 8.0 || mc_Entity.x == 9.0) {
+        water = 1;
+    } else {
+        water = 0;
+    }
 
     
     #ifdef temporalAA

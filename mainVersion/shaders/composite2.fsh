@@ -182,6 +182,8 @@ void fogVolumetric() {
         //density        *= mix(0.8, 1.0, mask.terrain*(1.0-rainStrength));
     float dither        = ditherDynamic;
 
+    bool isSky          = mask.terrain < 0.5;
+
 #ifdef setFogVolWater
     float rayStart      = depth.solidLin;
 #else
@@ -221,7 +223,7 @@ void fogVolumetric() {
     float sunPhase      = pow3(getPhaseSimple())*0.3+0.7;
 
     vec3 sunlight       = light.sun;
-        sunlight        = mix(sunlight, light.sky*(sunlightLum/skylightLum)*3.0, timeNoon*0.75);
+        sunlight        = mix(sunlight, light.sky*(sunlightLum/skylightLum), timeNoon*0.75);
     vec3 rayleigh       = light.sky*(1.0+timeLightTransition*3.0);
         rayleigh       *= exp(rayStart)*0.1;
         rayleigh        = mix(vec3(0.0), rayleigh, linStep(eyeBrightnessSmooth.y/240.0, 0.0, 0.5));
@@ -230,7 +232,7 @@ void fogVolumetric() {
         if (rayDepth>0.0) {
             float rDepth    = depthLinInv(rayDepth);
             vec4  rPos      = rayPos(rDepth);
-            float rDepthFix = (length(rPos.xyz))/far16;
+            float rDepthFix = isSky ? rayDepth * max(far/far16, 1.0): (length(rPos.xyz))/far16;
             float rStepFix  = rDepthFix/samples;
 
             #ifdef setFogVolWater

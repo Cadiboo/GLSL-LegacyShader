@@ -40,6 +40,8 @@ struct blockIdStruct {
     float redstone;
     float anvil;
     float glassStain;
+    float dandelion;
+    float poppy;
 } block;
 
 void idSetup() {
@@ -69,6 +71,8 @@ void idSetup() {
     block.redstone=152.0;
     block.anvil=145.0;
     block.glassStain=95.0;
+    block.dandelion=37.0;
+    block.poppy=38.0;
 
     isTopVertex = (gl_MultiTexCoord0.t < mc_midTexCoord.t);
 
@@ -78,7 +82,9 @@ void idSetup() {
      mc_Entity.x == block.wheat ||
      mc_Entity.x == block.carrot ||
      mc_Entity.x == block.potato ||
-     mc_Entity.x == block.beets);
+     mc_Entity.x == block.beets ||
+     mc_Entity.x == block.dandelion ||
+     mc_Entity.x == block.poppy);
 
     blockWindDouble = (mc_Entity.x == block.doublegrass);
 
@@ -112,7 +118,9 @@ void matSetup() {
      mc_Entity.x == block.beets) {
         foliage = 1.0;
     } else if (mc_Entity.x == block.reed ||
-     mc_Entity.x == block.vine) {
+     mc_Entity.x == block.vine ||
+     mc_Entity.x == block.dandelion ||
+     mc_Entity.x == block.poppy) {
          foliage = 0.5;
     } else if (mc_Entity.x == block.leaves ||
      mc_Entity.x == block.leaves2) {

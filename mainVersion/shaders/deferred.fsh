@@ -19,7 +19,7 @@ const float sunlightLum     = 20.0;
 const float skylightLum     = 2.2;
 
 const vec3 minLightCol      = vec3(0.5);
-const float minLightLum     = 0.03;
+const float minLightLum     = 0.06;
 
 const vec3 lightColor       = vec3(1.0, 0.42, 0.0);
 const float lightLum        = 1.0;

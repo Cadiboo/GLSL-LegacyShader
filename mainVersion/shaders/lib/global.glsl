@@ -22,10 +22,10 @@
 #define setBloom
 
 //internals
-#define expMinimum 0.01
+#define expMinimum 0.001
 #define expMaximum 200.0
 
 #define setWindEffect
 
-#define setFogVolWater
+//#define setFogVolWater
 #define setGlobWaterColor vec3(0.1, 0.3, 1.0)
